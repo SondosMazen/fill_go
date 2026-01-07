@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="19.5" height="19.5" viewBox="0 0 19.5 19.5">
+  <g id="Icon_Share" data-name="Icon/Share" transform="translate(0.75 0.75)">
+    <g id="network-connection">
+      <path id="Path" d="M0,2.856,5.713,0" transform="translate(6.385 4.873)" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.5"/>
+      <path id="Path-2" data-name="Path" d="M0,0,5.713,2.856" transform="translate(6.385 10.669)" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.5"/>
+      <circle id="Oval" cx="3" cy="3" r="3" transform="translate(0 6)" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.5"/>
+      <circle id="Oval-2" data-name="Oval" cx="3" cy="3" r="3" transform="translate(12)" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.5"/>
+      <circle id="Oval-3" data-name="Oval" cx="3" cy="3" r="3" transform="translate(12 12)" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.5"/>
+    </g>
+  </g>
+</svg>

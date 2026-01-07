@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="38.72" height="44" viewBox="0 0 38.72 44">
+  <g id="ic_service_my_bill" transform="translate(-55.556 -38.889)">
+    <g id="Exp-3.-F" transform="translate(55.556 38.889)">
+      <g id="Group_58826" data-name="Group 58826" transform="translate(0)">
+        <path id="Path_38864" data-name="Path 38864" d="M222.816,53.823h5.271a1.757,1.757,0,0,0,1.757-1.757V42.4a3.514,3.514,0,0,0-3.514-3.514h-9.663Z" transform="translate(-191.124 -38.889)" fill="#b4bcc0"/>
+        <path id="Path_38865" data-name="Path 38865" d="M55.556,82.889l4.5-2.251a1.76,1.76,0,0,1,1.561-.007L65.44,82.5a1.76,1.76,0,0,0,1.575-.013l3.592-1.835a1.761,1.761,0,0,1,1.588-.007L75.9,82.5a1.761,1.761,0,0,0,1.574,0l3.7-1.852a1.761,1.761,0,0,1,1.575,0l4.493,2.246V42.407a3.518,3.518,0,0,1,3.519-3.518H59.077a3.52,3.52,0,0,0-3.521,3.52v40.48Z" transform="translate(-55.556 -38.889)" fill="#eae6f2"/>
+        <g id="Group_58825" data-name="Group 58825" transform="translate(5.271 13.215)">
+          <path id="Path_38866" data-name="Path 38866" d="M89.767,123.979h8.785a.878.878,0,1,0,0-1.757H89.767a.878.878,0,0,0,0,1.757Z" transform="translate(-88.889 -122.222)" fill="#006df0"/>
+          <path id="Path_38867" data-name="Path 38867" d="M89.767,157.313h19.326a.878.878,0,0,0,0-1.757H89.767a.878.878,0,0,0,0,1.757Z" transform="translate(-88.889 -150.285)" fill="#006df0"/>
+          <path id="Path_38868" data-name="Path 38868" d="M89.767,190.646h19.326a.878.878,0,0,0,0-1.757H89.767a.878.878,0,0,0,0,1.757Z" transform="translate(-88.889 -178.347)" fill="#006df0"/>
+          <path id="Path_38869" data-name="Path 38869" d="M89.767,223.979h8.785a.878.878,0,1,0,0-1.757H89.767a.878.878,0,0,0,0,1.757Z" transform="translate(-88.889 -206.41)" fill="#006df0"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

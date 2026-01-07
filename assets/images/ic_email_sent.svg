@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100" viewBox="0 0 100 100">
+  <defs>
+    <clipPath id="clip-path">
+      <circle id="Ellipse_805" data-name="Ellipse 805" cx="50" cy="50" r="50" fill="#fafafa"/>
+    </clipPath>
+  </defs>
+  <g id="ic_email_sent" transform="translate(-872 -1910)">
+    <g id="Mask_Group_1316" data-name="Mask Group 1316" transform="translate(872 1910)" clip-path="url(#clip-path)">
+      <circle id="Ellipse_804" data-name="Ellipse 804" cx="50" cy="50" r="50" fill="#efeffd"/>
+      <circle id="Ellipse_805-2" data-name="Ellipse 805" cx="50" cy="50" r="50" fill="#fafafa"/>
+      <ellipse id="Ellipse_835" data-name="Ellipse 835" cx="29" cy="28.5" rx="29" ry="28.5" transform="translate(-12 -7)" fill="#f1f1f1"/>
+      <path id="Rectangle_2992" data-name="Rectangle 2992" d="M0,0H50.407V50.407H0Z" transform="translate(55.448 56.888)" fill="#f1f1f1"/>
+      <g id="Group_" data-name="Group " transform="translate(-12.242 25.744)">
+        <path id="Path_38734" data-name="Path 38734" d="M8.641,0H69.85a8.641,8.641,0,0,1,8.641,8.641V45.366a8.641,8.641,0,0,1-8.641,8.641H8.641A8.641,8.641,0,0,1,0,45.366V8.641A8.641,8.641,0,0,1,8.641,0Z" transform="translate(0 0.18)" fill="#fa0"/>
+        <path id="Path_3882" data-name="Path 3882" d="M5381.671,520.346a7.193,7.193,0,0,0,7.892,0l31.08-20.373a7.2,7.2,0,0,0-3.954-13.223h-62.144a7.2,7.2,0,0,0-3.954,13.223Z" transform="translate(-5345.652 -486.75)" fill="#ffde02"/>
+        <rect id="Rectangle_1905" data-name="Rectangle 1905" width="26" height="2" rx="1" transform="translate(27.242 10.257)" fill="#fff"/>
+        <rect id="Rectangle_1906" data-name="Rectangle 1906" width="16" height="2" rx="1" transform="translate(32.242 16.257)" fill="#fff"/>
+      </g>
+    </g>
+    <g id="Group_2" data-name="Group " transform="translate(943.613 1916.413)">
+      <ellipse id="Ellipse_806" data-name="Ellipse 806" cx="12.5" cy="13" rx="12.5" ry="13" transform="translate(0.387 -0.413)" fill="#3ec4b5"/>
+      <path id="Icon" d="M11.749.251a.857.857,0,0,1,0,1.212L4.892,8.32a.857.857,0,0,1-1.212,0L.251,4.892A.857.857,0,0,1,1.463,3.68L4.286,6.5,10.537.251A.857.857,0,0,1,11.749.251Z" transform="translate(6.887 8.301)" fill="#fff"/>
+    </g>
+  </g>
+</svg>

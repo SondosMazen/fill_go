@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="245" height="245" viewBox="0 0 245 245">
+  <g id="ic_home_shape" transform="translate(0 -1)">
+    <path id="Shape" d="M0,0H122.5A122.5,122.5,0,0,1,245,122.5v0A122.5,122.5,0,0,1,122.5,245H24.954A24.954,24.954,0,0,1,0,220.046V0A0,0,0,0,1,0,0Z" transform="translate(0 1)" fill="#111747" opacity="0.04" style="mix-blend-mode: luminosity;isolation: isolate"/>
+    <path id="Shape-2" data-name="Shape" d="M0,0H245A122.5,122.5,0,0,1,122.5,122.5,122.5,122.5,0,0,1,0,0Z" transform="translate(0 1)" fill="#fff" opacity="0.05" style="mix-blend-mode: luminosity;isolation: isolate"/>
+  </g>
+</svg>

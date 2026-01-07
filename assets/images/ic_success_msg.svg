@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100.014" viewBox="0 0 100 100.014">
+  <g id="ic_success_msg" transform="translate(-583 -214)">
+    <path id="Fill_1" data-name="Fill 1" d="M100,50.031A50,50,0,1,1,50,0a50.064,50.064,0,0,1,50,50.031" transform="translate(583 214)" fill="#f7f7f8"/>
+    <path id="Fill_1-2" data-name="Fill 1" d="M67.829,33.938a33.926,33.926,0,1,1-2.1-11.751,33.4,33.4,0,0,1,2.1,11.751" transform="translate(599.085 230.086)" fill="#ddfcfa" stroke="#bdefea" stroke-width="1"/>
+    <path id="Fill_4" data-name="Fill 4" d="M8.618,17.114a2.458,2.458,0,0,1-1.725-.682L.721,10.5A2.325,2.325,0,0,1,.7,7.149a2.478,2.478,0,0,1,3.439-.022L8.582,11.4,19.425.7A2.478,2.478,0,0,1,22.864.683a2.322,2.322,0,0,1,.023,3.347L10.332,16.41a2.448,2.448,0,0,1-1.715.7" transform="translate(621.417 255.643)" fill="#3ec4b5"/>
+  </g>
+</svg>

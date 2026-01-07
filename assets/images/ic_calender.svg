@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="15.732" height="17.335" viewBox="0 0 15.732 17.335">
+  <g id="ic_calender" transform="translate(0.65 0.65)">
+    <path id="Line_200" d="M0,.473H14.29" transform="translate(0.074 5.464)" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.3"/>
+    <path id="Line_201" d="M.459.473H.466" transform="translate(10.319 8.595)" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.3"/>
+    <path id="Line_202" d="M.459.473H.466" transform="translate(6.761 8.595)" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.3"/>
+    <path id="Line_203" d="M.459.473H.466" transform="translate(3.196 8.595)" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.3"/>
+    <path id="Line_204" d="M.459.473H.466" transform="translate(10.319 11.711)" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.3"/>
+    <path id="Line_205" d="M.459.473H.466" transform="translate(6.761 11.711)" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.3"/>
+    <path id="Line_206" d="M.459.473H.466" transform="translate(3.196 11.711)" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.3"/>
+    <path id="Line_207" d="M.463,0V2.638" transform="translate(9.995 0)" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.3"/>
+    <path id="Line_208" d="M.463,0V2.638" transform="translate(3.518 0)" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.3"/>
+    <path id="Path" d="M10.614,0H3.825C1.471,0,0,1.312,0,3.723v7.256a3.483,3.483,0,0,0,3.825,3.791h6.781c2.362,0,3.825-1.319,3.825-3.73V3.723C14.439,1.312,12.976,0,10.614,0Z" transform="translate(0 1.266)" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.3"/>
+  </g>
+</svg>

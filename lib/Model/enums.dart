@@ -1,0 +1,17 @@
+enum BUTTONTYPE { SWITCH, PRESSED }
+
+enum BUTTONPRESSEDTYPE { ConditionButton, RatingButton, SharingButton }
+
+enum MORE_TYPE {
+  PROFILE,
+  SUBSCRIPTIONS,
+  ABOUT,
+  SETTINGS,
+  CONTACT_NUMBERS,
+  // ALBUM,
+  CONTACT_US,
+  FREQUENCY_QUESTIONS,
+  LOGOUT
+}
+
+class TSettings {}

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+  <g id="Arrow_-_Down_Circle" data-name="Arrow - Down Circle" transform="translate(0.75 0.75)">
+    <path id="Stroke_1" data-name="Stroke 1" d="M0,9.25A9.25,9.25,0,1,1,9.25,18.5,9.25,9.25,0,0,1,0,9.25Z" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.5"/>
+    <path id="Stroke_3" data-name="Stroke 3" d="M0,3.486,3.471,0,6.942,3.486" transform="translate(5.779 7.206)" fill="none" stroke="#392c23" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.5"/>
+  </g>
+</svg>

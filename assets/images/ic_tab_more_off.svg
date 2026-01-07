@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+  <g id="ic_tab_more_off" transform="translate(0 0)">
+    <path id="Stroke_1" data-name="Stroke 1" d="M9.25,0A9.25,9.25,0,1,1,0,9.25,9.251,9.251,0,0,1,9.25,0Z" transform="translate(0.75 0.75)" fill="none" stroke="#bdbbbb" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.5"/>
+    <path id="Fill_3" data-name="Fill 3" d="M1.2,2.395A1.2,1.2,0,1,1,2.4,1.2a1.2,1.2,0,0,1-1.2,1.2" transform="translate(4.323 8.802)" fill="#bdbbbb"/>
+    <path id="Fill_5" data-name="Fill 5" d="M1.2,2.395A1.2,1.2,0,1,1,2.4,1.2a1.2,1.2,0,0,1-1.2,1.2" transform="translate(8.802 8.802)" fill="#bdbbbb"/>
+    <path id="Fill_7" data-name="Fill 7" d="M1.2,2.395A1.2,1.2,0,1,1,2.4,1.2a1.2,1.2,0,0,1-1.2,1.2" transform="translate(13.281 8.802)" fill="#bdbbbb"/>
+  </g>
+</svg>
