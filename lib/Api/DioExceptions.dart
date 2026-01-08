@@ -1,7 +1,5 @@
-
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
-
 import '../Helpers/snackbar_helper.dart';
 import '../Modules/Login/login_screen.dart';
 

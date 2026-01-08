@@ -13,31 +13,52 @@ TUser tUserFromJson(String str) => TUser.fromJson(json.decode(str));
 
 String tUserToJson(TUser data) => json.encode(data.toJson());
 
+enum UserType { inspector, contractor }
+
 class TUser extends BaseModel {
   TUser({
+    this.oid,
     this.name,
     this.userName,
-    this.isActive,
-    this.userType,
+    this.isActive = false,
+    required this.userType,
     this.token,
     this.updatedAt,
-    this.oid,
   });
 
+  int? oid;
   String? name;
   String? userName;
-  String? isActive;
-  String? userType;
+  bool isActive;
+  final UserType userType;
   String? token;
   String? updatedAt;
-  int? oid;
 
   factory TUser.fromJson(Map<String, dynamic> json) {
-    if (json["oid"] is String) {
-      TUser(oid: int.parse(json["oid"]));
-    } else {
-      TUser(oid: json["oid"]);
-    }
+    return TUser(
+      oid: json['oid'] != null ? int.tryParse(json['oid'].toString()) : null,
+      name: json['name'],
+      userName: json['user_name'],
+      isActive: json['is_active']?.toString() == '1', // ✅ تحويل "1"/"0" إلى bool
+      userType: () {
+        final type = json['user_type']?.toString();
+        switch (type) {
+          case '1':
+            return UserType.inspector;
+          case '2':
+            return UserType.contractor;
+          default:
+            return UserType.contractor; // قيمة افتراضية إذا كانت غير معروفة
+        }
+      }(),
+      token: json['token'],
+    );
+    // if (json["oid"] is String) {
+    //   TUser(oid: int.parse(json["oid"]),
+    //   );
+    // } else {
+    //   TUser(oid: json["oid"]);
+    // }
 
     return TUser(
       name: json['name'],

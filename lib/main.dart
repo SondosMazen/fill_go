@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'package:fill_go/Modules/Main/Home/home_screen.dart';
+import 'package:fill_go/presentation/controllers/auth_controller.dart';
+import 'package:fill_go/presentation/controllers/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fill_go/App/app.dart';
 // import 'package:timeago/timeago.dart';
@@ -13,6 +16,8 @@ import 'Helpers/assets_color.dart';
 import 'Helpers/font_helper.dart';
 import 'Modules/Login/login_screen.dart';
 import 'Modules/Splash/splash_screen.dart';
+import 'core/services/storage_service.dart';
+import 'core/services/token_service.dart';
 // import 'l10n/app_localization.dart';
 
 class MyHttpOverrides extends HttpOverrides {
@@ -28,6 +33,14 @@ class MyHttpOverrides extends HttpOverrides {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Application.initSharedPreferences();
+
+  await GetStorage.init();
+
+  await Get.putAsync<StorageService>(() => StorageService().init());
+  await Get.putAsync<TokenService>(() => TokenService().init());
+
+  Get.lazyPut(() => AuthController(), fenix: true);
 
   // objectbox = await ObjectBox.init();
   HttpOverrides.global = MyHttpOverrides();
@@ -36,6 +49,8 @@ void main() async {
   //   // setLocaleMessages(locale, lookupMessages);
   // });
 
+  // تهيئة GetStorage
+  await GetStorage.init();
   Application().init(); //SharedPreferences init
 
   runApp(MaterialApp.router(
@@ -111,6 +126,8 @@ class _MainAppState extends State<MainApp> {
       // enableScaleText: () => false,
       builder: (child, constraint) {
         return GetMaterialApp(
+          debugShowCheckedModeBanner: false,
+          initialBinding: Binding(),
           theme: ThemeData(
             useMaterial3: true,
              colorScheme: ColorScheme.fromSeed(
@@ -145,21 +162,21 @@ class _MainAppState extends State<MainApp> {
               indicator: const UnderlineTabIndicator(),
             ),
           ),
-          initialBinding: Binding(),
           navigatorKey: Application.navigatorKey,
           // set property
           // localizationsDelegates: AppLocalization.localizationsDelegates,
           // supportedLocales: AppLocalization.all,
           home: const LaunchScreen(),
-          getPages: [
-            GetPage(
-              name: '/launch_screen',
-              page: () => const LaunchScreen(),
-            ),
-            GetPage(name: '/login_screen', page: () => const LoginScreen()),
-          ],
-          debugShowCheckedModeBanner: true,
-          
+          getPages: AppPages.pages,
+
+          // getPages: [
+          //   GetPage(
+          //     name: '/launch_screen',
+          //     page: () => const LaunchScreen(),
+          //   ),
+          //   GetPage(name: '/login_screen', page: () => const LoginScreen()),
+          // ],
+
         );
       },
     );

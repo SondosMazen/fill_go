@@ -46,7 +46,8 @@ dependencies:
   logger: ^2.6.2
   flutter_multi_select_items: ^0.4.3
   searchfield: ^1.4.0
-
+  # Storage & Persistence
+  get_storage: ^2.1.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

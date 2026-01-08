@@ -1,8 +1,7 @@
+import 'dart:developer';
 import 'dart:ui';
-
 import 'package:fill_go/Api/BaseResponse.dart';
 import 'package:fill_go/Model/TUser.dart';
-import 'package:fill_go/Modules/Main/Home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -10,7 +9,8 @@ import 'package:fill_go/Helpers/assets_color.dart';
 import 'package:fill_go/Helpers/assets_helper.dart';
 import 'package:fill_go/Modules/Login/login_controller.dart';
 import 'package:fill_go/Widgets/custom_widgets.dart';
-// import 'package:sso_plugin/sso_plugin.dart';
+import '../../presentation/controllers/auth_controller.dart';
+import '../Main/Home/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,15 +20,15 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  TextEditingController myEmailController = TextEditingController();
-  TextEditingController myPasswordController = TextEditingController();
+  // TextEditingController myEmailController = TextEditingController();
+  // TextEditingController myPasswordController = TextEditingController();
   final formKey = GlobalKey<FormState>();
   final loginController = Get.put(LoginController());
 
   @override
   void dispose() {
-    myEmailController.dispose();
-    myPasswordController.dispose();
+    // myEmailController.dispose();
+    // myPasswordController.dispose();
     super.dispose();
   }
 
@@ -135,7 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(height: 5),
                             MyTextField(
-                              myController: myEmailController,
+                              myController: loginController.myIDController,
                               textValidType: TEXT_VALID_TYPE.GENERAL,
                               textInputAction: TextInputAction.next,
                               hint: 'اكتب اسم المستخدم',
@@ -155,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(height: 5),
                             MyTextField(
-                              myController: myPasswordController,
+                              myController: loginController.myPasswordController,
                               textValidType: TEXT_VALID_TYPE.GENERAL,
                               hint: 'اكتب كلمة المرور',
                               iconData: Icons.lock_outline_rounded,
@@ -165,9 +165,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             MyCustomButton(
                               text: 'تسجيل الدخول',
                               onPressed: () {
-                                // if (formKey.currentState!.validate()) {
+                                log('${loginController.myIDController.text} popp');
+
+                                if (formKey.currentState!.validate()) {
                                   handleLoginClick();
-                                // }
+                                }
                               },
                             ),
                             const SizedBox(width: 10),
@@ -189,14 +191,25 @@ class _LoginScreenState extends State<LoginScreen> {
     // Get.offAll(() => HomeScreen());
     if (formKey.currentState!.validate()) {
       Map<String, dynamic> map = {};
-      map["user_name"] = myEmailController.text;
-      map["password"] = myPasswordController.text;
+      map["user_name"] = loginController.myIDController.text;
+      map["password"] = loginController.myPasswordController.text;
 
       BaseResponse<TUser>? tUserResponse = await loginController
           .sendLoginRequest(map: map);
+      log('${tUserResponse?.status}');
 
       if (tUserResponse!.message == null) return;
       if (tUserResponse.status!) {
+        TUser user = tUserResponse.data!;
+
+        // نستخدم AuthController لتحديث حالة المستخدم
+        final authController = Get.find<AuthController>();
+        authController.setCurrentUser(user); // ✅ يضع isLoggedIn = true تلقائيًا
+        authController.storageService?.saveCurrentUser(user); // حفظ محلي
+        // ✅ التوجيه بناءً على userType باستخدام الدالة الجاهزة
+        // final route = authController.getHomeRoute();
+        // Get.offNamed(route);
+
         Get.offAll(()=>HomeScreen());
       }
     }

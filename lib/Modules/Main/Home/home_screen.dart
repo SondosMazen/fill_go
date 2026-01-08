@@ -826,7 +826,14 @@ import 'package:fill_go/Modules/Main/Home/home_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../App/Constant.dart';
+import '../../../App/app.dart';
+import '../../../core/services/token_service.dart';
+import '../../../presentation/controllers/routes/app_pages.dart';
+import '../../Login/login_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
@@ -855,10 +862,38 @@ class HomeScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.black),
-            onPressed: () {
-              controller.logout();
+
+            onPressed: () async {
+              // 1️⃣ مسح التوكن
+              await TokenService.to.clearToken();
+
+              final shared = Application.sharedPreferences;
+              await shared.setBool(Constants.USER_IS_LOGIN, false);
+              await shared.setString(Constants.USER_DATA, "");
+              Get.offAllNamed(AppPages.login);
+
             },
           ),
+
+          // IconButton(
+          //   icon: const Icon(Icons.logout, color: Colors.black),
+          //   onPressed: () async{
+          //     await TokenService.to.clearToken();
+          //
+          //     final shared = Application.sharedPreferences;
+          //     // await shared.setString(Constants.USER_AUTH_TOKEN, "");
+          //     await shared.setBool(Constants.USER_IS_LOGIN, false);
+          //     await shared.setString(Constants.USER_DATA, "");
+          //
+          //     final context = Application.navigatorKey.currentState?.context;
+          //     if (context != null) {
+          //       Navigator.of(context, rootNavigator: true).pop();
+          //     }
+          //
+          //     Get.offAll(const LoginScreen());
+          //     // controller.logout();
+          //   },
+          // ),
         ],
       ),
 

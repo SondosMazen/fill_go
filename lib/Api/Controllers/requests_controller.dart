@@ -27,7 +27,7 @@ class RequestsController {
     Map<String, dynamic>? body,
     Map<String, dynamic>? query,
   }) {
-    return DioHelper().get('api/rubble/get_sites', queryParameters: query);
+    return DioHelperApi().get('api/rubble/get_sites', queryParameters: query);
     // return DioHelper().get("/public/api/Apps", queryParameters: query);
   }
 
@@ -35,7 +35,7 @@ class RequestsController {
     Map<String, dynamic>? body,
     Map<String, dynamic>? query,
   }) {
-    return DioHelper(
+    return DioHelperApi(
       // baseUrl: Constants.baseUrlCSApi,
     ).get("api/rubble/get_orders", queryParameters: query);
     // return DioHelper().get("/public/api/Apps", queryParameters: query);
@@ -45,7 +45,7 @@ class RequestsController {
     Map<String, dynamic>? body,
     Map<String, dynamic>? query,
   }) {
-    return DioHelper(
+    return DioHelperApi(
       // baseUrl: Constants.baseUrlCSApi,
     ).get("api/rubble/get_drivers", queryParameters: query);
     // return DioHelper().get("/public/api/Apps", queryParameters: query);
@@ -104,7 +104,7 @@ class RequestsController {
     required Map<String, dynamic> body,
     Map<String, dynamic>? query,
   }) {
-    return DioHelper().post(
+    return DioHelperApi().post(
       "api/rubble/process_order",
       data: body,
       queryParameters: query,
@@ -115,7 +115,7 @@ class RequestsController {
     required var body,
     Map<String, dynamic>? query,
   }) {
-    return DioHelper().post(
+    return DioHelperApi().post(
       "api/rubble/store_order",
       data: body,
       queryParameters: query,

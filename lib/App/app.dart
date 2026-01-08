@@ -8,8 +8,14 @@ class Application {
   static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   static Application instance = Application();
   static const pageSize = 20;
-  static Future<SharedPreferences> sharedPreferences =
-      SharedPreferences.getInstance();
+  // static Future<SharedPreferences> sharedPreferences =
+  //     SharedPreferences.getInstance();
+  static late SharedPreferences sharedPreferences;
+
+  static Future<void> initSharedPreferences() async {
+    sharedPreferences = await SharedPreferences.getInstance();
+  }
+
   static SharedPreferences? staticSharedPreferences;
 
   static String? userType;

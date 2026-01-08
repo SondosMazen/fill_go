@@ -78,25 +78,25 @@ class HomeController extends BaseGetxController {
     return tOrder;
   }
 
-  void logout() async {
-    SharedPreferences sharedPreferences = await Application.sharedPreferences;
-    setLoading(true);
-    // update();
-    await UserAuthRepo.instance.postUserAuthLogOut();
-    setLoading(false);
-    // update();
-    sharedPreferences.setString(Constants.USER_DATA, '');
-    sharedPreferences.setString(Constants.USER_AUTH_TOKEN, '');
-    sharedPreferences.setBool(Constants.USER_IS_LOGIN, false);
-    sharedPreferences.setString(Constants.USER_TYPE, '-1');
-
-    Application.staticSharedPreferences = sharedPreferences;
-    Get.offAll(LoginScreen());
-    // if (checkResponse(response)) {
-    //   return null;
-    // }
-  }
-
+  // void logout() async {
+  //   SharedPreferences sharedPreferences = await Application.sharedPreferences;
+  //   setLoading(true);
+  //   // update();
+  //   await UserAuthRepo.instance.postUserAuthLogOut();
+  //   setLoading(false);
+  //   // update();
+  //   sharedPreferences.setString(Constants.USER_DATA, '');
+  //   sharedPreferences.setString(Constants.USER_AUTH_TOKEN, '');
+  //   sharedPreferences.setBool(Constants.USER_IS_LOGIN, false);
+  //   sharedPreferences.setString(Constants.USER_TYPE, '-1');
+  //
+  //   Application.staticSharedPreferences = sharedPreferences;
+  //   Get.offAll(LoginScreen());
+  //   // if (checkResponse(response)) {
+  //   //   return null;
+  //   // }
+  // }
+/// ///
   // List<TMyNotification>? tMyNotification = [];
   // Future<void> getMyNotification() async {
   //   isloadNotification = true;
