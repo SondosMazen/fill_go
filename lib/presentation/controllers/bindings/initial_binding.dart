@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/services/storage_service.dart' show StorageService;
-import '../auth_controller.dart';
+import '../controllers/auth_controller.dart';
 
 /// Binding للتهيئة الأولية للتطبيق
 class InitialBinding implements Bindings {

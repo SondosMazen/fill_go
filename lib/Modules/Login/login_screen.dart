@@ -9,8 +9,10 @@ import 'package:fill_go/Helpers/assets_color.dart';
 import 'package:fill_go/Helpers/assets_helper.dart';
 import 'package:fill_go/Modules/Login/login_controller.dart';
 import 'package:fill_go/Widgets/custom_widgets.dart';
-import '../../presentation/controllers/auth_controller.dart';
-import '../Main/Home/home_screen.dart';
+import '../../App/Constant.dart';
+import '../../App/app.dart';
+import '../../presentation/controllers/controllers/auth_controller.dart';
+import 'package:fill_go/presentation/controllers/routes/app_pages.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -49,141 +51,172 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  GetBuilder<LoginController> initBody(formKey) {
-    // final formKey0 = GlobalKey<FormState>();
+  Widget initBody(GlobalKey<FormState> formKey) {
     return GetBuilder<LoginController>(
       init: loginController,
       builder: (controller) {
-        return Stack(
-          children: [
-            // Gradient
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFFF7FAFF),
-                    Color(0xFFEAF2FF),
-                    Color(0xFFD6E6FF),
-                  ],
-                ),
-              ),
+        return Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFFFFF8F0), // Very light orange tint
+                Color(0xFFFFFFFF),
+              ],
             ),
-            // Blurred shapes
-            Align(
-              alignment: Alignment.topLeft,
-              child: Container(
-                width: 220,
-                height: 220,
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Container(
-                width: 260,
-                height: 260,
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.18),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),
-              child: Container(color: Colors.transparent),
-            ),
-
-            SingleChildScrollView(
+          ),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
               child: Column(
                 children: [
-                  SizedBox(height: 100.h),
-                  Center(
-                    child: Image.asset(
-                      AssetsHelper.logo,
-                      width: 150.w,
-                      height: 150.h,
+                  SizedBox(height: 60.h),
+                  // Logo Section
+                  Hero(
+                    tag: 'logo',
+                    child: Container(
+                      padding: EdgeInsets.all(20.w),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AssetsColors.primaryOrange.withOpacity(0.12),
+                            blurRadius: 24,
+                            offset: const Offset(0, 12),
+                          ),
+                        ],
+                      ),
+                      child: Image.asset(
+                        AssetsHelper.logo,
+                        width: 100.w,
+                        height: 100.h,
+                      ),
                     ),
                   ),
+                  SizedBox(height: 40.h),
+                  // Login Card
                   Container(
-                    alignment: AlignmentDirectional.topStart,
-                    child: Padding(
-                      padding: EdgeInsetsDirectional.only(
-                        start: 14.w,
-                        end: 14.w,
-                        top: 10.h,
-                        bottom: 10.h,
-                      ),
-                      child: Form(
-                        key: formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'اسم المستخدم',
-                              textAlign: TextAlign.start,
-                              style: TextStyle(
-                                color: AssetsColors.color_text_black_392C23,
-                                fontSize: 14.sp,
-                                fontFamily: AssetsHelper.FONT_Avenir,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            MyTextField(
-                              myController: loginController.myIDController,
-                              textValidType: TEXT_VALID_TYPE.GENERAL,
-                              textInputAction: TextInputAction.next,
-                              hint: 'اكتب اسم المستخدم',
-                              iconData: Icons.person,
-                              isPassword: false,
-                            ),
-                            const SizedBox(height: 30),
-                            Text(
-                              'كلمة المرور',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: AssetsColors.color_text_black_392C23,
-                                fontSize: 14.sp,
-                                fontFamily: AssetsHelper.FONT_Avenir,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            MyTextField(
-                              myController: loginController.myPasswordController,
-                              textValidType: TEXT_VALID_TYPE.GENERAL,
-                              hint: 'اكتب كلمة المرور',
-                              iconData: Icons.lock_outline_rounded,
-                              isPassword: true,
-                            ),
-                            const SizedBox(height: 30),
-                            MyCustomButton(
-                              text: 'تسجيل الدخول',
-                              onPressed: () {
-                                log('${loginController.myIDController.text} popp');
-
-                                if (formKey.currentState!.validate()) {
-                                  handleLoginClick();
-                                }
-                              },
-                            ),
-                            const SizedBox(width: 10),
-                          ],
+                    width: double.infinity,
+                    padding: EdgeInsets.all(24.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(28.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 40,
+                          offset: const Offset(0, 10),
                         ),
+                      ],
+                    ),
+                    child: Form(
+                      key: formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'تسجيل الدخول',
+                            style: TextStyle(
+                              color: AssetsColors.darkBrown,
+                              fontSize: 26.sp,
+                              fontFamily: AssetsHelper.FONT_Avenir,
+                              fontWeight: FontWeight.w800,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 8.h),
+                          // Text(
+                          //   'مرحباً بك في Fill Go',
+                          //   style: TextStyle(
+                          //     color: Colors.grey.shade600,
+                          //     fontSize: 14.sp,
+                          //     fontFamily: AssetsHelper.FONT_Avenir,
+                          //   ),
+                          //   textAlign: TextAlign.center,
+                          // ),
+                          SizedBox(height: 32.h),
+                          _buildLabel('اسم المستخدم'),
+                          SizedBox(height: 10.h),
+                          MyTextField(
+                            myController: loginController.myIDController,
+                            textValidType: TEXT_VALID_TYPE.GENERAL,
+                            textInputAction: TextInputAction.next,
+                            hint: 'ادخل اسم المستخدم',
+                            iconData: Icons.person_outline_rounded,
+                            isPassword: false,
+                            filled: true,
+                            fillColor: const Color(0xFFFAFAFA),
+                          ),
+                          SizedBox(height: 20.h),
+                          _buildLabel('كلمة المرور'),
+                          SizedBox(height: 10.h),
+                          MyTextField(
+                            myController: loginController.myPasswordController,
+                            textValidType: TEXT_VALID_TYPE.GENERAL,
+                            hint: 'ادخل كلمة المرور',
+                            iconData: Icons.lock_outline_rounded,
+                            isPassword: true,
+                            filled: true,
+                            fillColor: const Color(0xFFFAFAFA),
+                          ),
+                          SizedBox(height: 16.h),
+                          Align(
+                            alignment: AlignmentDirectional.centerEnd,
+                            child: TextButton(
+                              onPressed: () {
+                                // Forgot password logic
+                              },
+                              style: TextButton.styleFrom(
+                                foregroundColor: AssetsColors.primaryOrange,
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(0, 30),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'نسيت كلمة المرور؟',
+                                style: TextStyle(
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 28.h),
+                          MyCustomButton(
+                            text: 'دخول',
+                            onPressed: () {
+                              if (formKey.currentState!.validate()) {
+                                handleLoginClick();
+                              }
+                            },
+                          ),
+                        ],
                       ),
                     ),
                   ),
+                  SizedBox(height: 40.h),
                 ],
               ),
             ),
-          ],
+          ),
         );
       },
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: AssetsColors.color_text_black_392C23,
+        fontSize: 14.sp,
+        fontFamily: AssetsHelper.FONT_Avenir,
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 
@@ -201,7 +234,11 @@ class _LoginScreenState extends State<LoginScreen> {
       if (tUserResponse!.message == null) return;
       if (tUserResponse.status!) {
         TUser user = tUserResponse.data!;
-
+        final userType = user.userType?.toString() ?? '1';
+        await Application.sharedPreferences.setString(
+          Constants.USER_TYPE,
+          userType,
+        );
         // نستخدم AuthController لتحديث حالة المستخدم
         final authController = Get.find<AuthController>();
         authController.setCurrentUser(user); // ✅ يضع isLoggedIn = true تلقائيًا
@@ -210,7 +247,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // final route = authController.getHomeRoute();
         // Get.offNamed(route);
 
-        Get.offAll(()=>HomeScreen());
+        Get.offAllNamed(AppPages.home);
       }
     }
   }

@@ -20,7 +20,7 @@ class AssetsColors {
   static const color_gray_F2F5FE = Color(0xFFF2F5FE);
   static const color_gray_hint_9C9C9C = Color(0xFF9C9C9C);
   static const color_black_202020 = Color(0xFF202020);
-static const lightGreen = Color(0x803EC4B5);
+  static const lightGreen = Color(0x803EC4B5);
   static const color_white = Color(0xFFFFFFFF);
 
   static const color_screen_background = Color(0xFFFAFAFA);
@@ -80,6 +80,9 @@ static const lightGreen = Color(0x803EC4B5);
 
   static Color error = HexColor.fromHex("#e61f34"); // red color
 
+  static const primaryOrange = Color(0xffFF9900);
+  static const appSubtitleGreen = Color(0xFFA4FFA4);
+  static const darkBrown = Color(0xFF492C00);
 }
 
 extension HexColor on Color {

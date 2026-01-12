@@ -95,7 +95,7 @@ class MyCustomButton extends StatelessWidget {
   late bool isOnlyBorder;
 
   late VoidCallback onPressed;
-  static const Color _color = AssetsColors.color_green_3EC4B5;
+  static const Color _color = AssetsColors.primaryOrange;
 
   MyCustomButton({
     super.key,
@@ -300,7 +300,7 @@ class _MyTextFieldState extends State<MyTextField> {
             ? InputBorder.none
             : const OutlineInputBorder(
                 borderSide: BorderSide(
-                  color: AssetsColors.color_green_3EC4B5,
+                  color: AssetsColors.primaryOrange,
                   width: 2,
                 ),
                 borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -335,7 +335,7 @@ class _MyTextFieldState extends State<MyTextField> {
             ? InputBorder.none
             : const OutlineInputBorder(
                 borderSide: BorderSide(
-                  color: AssetsColors.color_green_3EC4B5,
+                  color: AssetsColors.primaryOrange,
                   width: 0.7,
                 ),
                 borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -360,7 +360,7 @@ class _MyTextFieldState extends State<MyTextField> {
                   widget.iconData,
                   size: 20,
                   color: _isFocusedChanged
-                      ? AssetsColors.color_green_3EC4B5
+                      ? AssetsColors.primaryOrange
                       : AssetsColors.color_gray_hint_9C9C9C,
                 ),
               ),

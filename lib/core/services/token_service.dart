@@ -1,8 +1,6 @@
-
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../presentation/controllers/auth_controller.dart';
+import '../../presentation/controllers/controllers/auth_controller.dart';
 
 class TokenService extends GetxService {
   static TokenService get to => Get.find();

@@ -1,8 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
-import '../../Model/TUser.dart';
-import '../../core/services/storage_service.dart';
-import '../../core/services/token_service.dart';
+import '../../../App/Constant.dart';
+import '../../../App/app.dart';
+import '../../../Model/TUser.dart';
+import '../../../core/services/storage_service.dart';
+import '../../../core/services/token_service.dart';
 
 class AuthController extends GetxController {
   StorageService? storageService;
@@ -50,6 +52,8 @@ class AuthController extends GetxController {
   void setCurrentUser(TUser user) {
     _currentUser.value = user;
     _isLoggedIn.value = true;
+    Application.sharedPreferences.setString(Constants.USER_TYPE, user.userType?.toString() ?? '1');
+
     update(); // إعلام GetX بالتغيير
   }
 
