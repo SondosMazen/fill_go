@@ -13,7 +13,6 @@ class TokenService extends GetxService {
   bool get isTokenValid => _isTokenValid.value;
   bool get isInitialized => _isInitialized.value;
 
-  // دالة التهيئة الجديدة
   Future<TokenService> init() async {
     try {
       print('🔄 بدء تهيئة TokenService...');
@@ -23,7 +22,7 @@ class TokenService extends GetxService {
       return this;
     } catch (e) {
       print('❌ خطأ في تهيئة TokenService: $e');
-      _isInitialized.value = true; // مع ذلك نعتبرها مهيأة للمتابعة
+      _isInitialized.value = true;
       return this;
     }
   }
@@ -97,13 +96,7 @@ class TokenService extends GetxService {
   // التحقق من صلاحية التوكن
   Future<bool> validateToken() async {
     if (token.isEmpty) {return false;}
-
-    // هنا يمكنك إضافة منطق للتحقق من صلاحية التوكن مع السيرفر
-    // إذا كان التوكن لا يزال صالحًا
-
     try {
-      // هنا يمكنك إضافة منطق التحقق من السيرفر
-      // مؤقتاً نعتبر أي توكن غير فارغ صالح
       return token.isNotEmpty;
     } catch (e) {
       print('❌ خطأ في التحقق من التوكن: $e');

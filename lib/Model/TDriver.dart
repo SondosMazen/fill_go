@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:fill_go/Model/BaseModel.dart';
 
 class TDriver extends BaseModel {

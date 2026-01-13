@@ -1,10 +1,9 @@
 import 'package:fill_go/Model/BaseModel.dart';
 
-/// نموذج قبول الطلب المعلق (Pending Accept Order)
-/// يُستخدم لحفظ عمليات قبول الطلبات محلياً عند عدم توفر الإنترنت
+/// (Pending Accept Order) يُستخدم لحفظ عمليات قبول الطلبات محلياً عند عدم توفر الإنترنت
 class PendingAcceptOrder extends BaseModel {
   int? id; // معرف محلي في قاعدة البيانات
-  String? orderOid; // معرف الطلب الذي سيتم قبوله
+  String? orderOid;
   String? notes; // ملاحظات المفتش
   String? createdAt;
   String? syncStatus; // 'pending', 'syncing', 'failed', 'success'

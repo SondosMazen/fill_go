@@ -1,18 +1,8 @@
-
-// import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
-// import 'package:flutter_gen/gen_l10n/app_localizations.dart' as AppLocale;
-// import 'package:fill_go/App/app.dart';
-// import 'package:url_launcher/url_launcher.dart';
-
 import '../Helpers/assets_color.dart';
 import '../Helpers/assets_helper.dart';
 
 class Utils {
-  // static AppLocale.AppLocalizations getString() {
-  //   return AppLocale.AppLocalizations.of(
-  //       Application.navigatorKey.currentContext!)!;
-  // }
 }
 
 class AppTextStyles {

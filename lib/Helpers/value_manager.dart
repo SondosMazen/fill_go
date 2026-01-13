@@ -1,7 +1,5 @@
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-
-
 class AppSize {
   static const double s0 = 0.0;
   static const double s0_2 = 0.2;

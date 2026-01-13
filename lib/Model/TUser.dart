@@ -1,9 +1,4 @@
-// To parse this JSON data, do
-//
-//     final tUser = tUserFromJson(jsonString);
-
 import 'dart:convert';
-
 import 'package:fill_go/App/Constant.dart';
 import 'package:fill_go/App/app.dart';
 import 'package:fill_go/Model/BaseModel.dart';
@@ -39,35 +34,21 @@ class TUser extends BaseModel {
       oid: json['oid'] != null ? int.tryParse(json['oid'].toString()) : null,
       name: json['name'],
       userName: json['user_name'],
-      isActive: json['is_active']?.toString() == '1', // ✅ تحويل "1"/"0" إلى bool
+      isActive: json['is_active']?.toString() == '1',
       userType: () {
         final type = json['user_type']?.toString();
         switch (type) {
+          // المفتش
           case '1':
             return UserType.inspector;
+          // المراقب
           case '2':
             return UserType.contractor;
           default:
-            return UserType.contractor; // قيمة افتراضية إذا كانت غير معروفة
+            return UserType.contractor; // قيمة افتراضية
         }
       }(),
       token: json['token'],
-    );
-    // if (json["oid"] is String) {
-    //   TUser(oid: int.parse(json["oid"]),
-    //   );
-    // } else {
-    //   TUser(oid: json["oid"]);
-    // }
-
-    return TUser(
-      name: json['name'],
-      userName: json['user_name'],
-      isActive: json['is_active'],
-      userType: json['user_type'],
-      token: json['token'],
-      updatedAt: json['updated_at'],
-      oid: json['oid'],
     );
   }
 

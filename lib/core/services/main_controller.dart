@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Api/BaseResponse.dart';
@@ -7,10 +6,7 @@ import '../../Api/DioHelper.dart';
 import '../../Api/Repo/user_auth_repo.dart';
 import '../../App/Constant.dart';
 import '../../App/app.dart';
-import '../../Helpers/assets_color.dart';
-import '../../Helpers/assets_helper.dart';
 import '../../Model/TUser.dart';
-import '../../Utils/utils.dart';
 
 class MainController extends GetxController {
 
@@ -39,18 +35,15 @@ class MainController extends GetxController {
 
   @override
   void onReady() {
-    // called after the widget is rendered on screen
     super.onReady();
   }
 
   @override
   void onClose() {
-    // called just before the Controller is deleted from memory
     super.onClose();
   }
 
   logout() async {
-    // SharedPreferences shared = await Application.sharedPreferences;
     BaseResponse<String>? response =
     await UserAuthRepo.instance.Logout({'token': getToken()});
   }

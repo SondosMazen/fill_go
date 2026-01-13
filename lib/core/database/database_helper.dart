@@ -4,8 +4,6 @@ import 'package:fill_go/Model/PendingAcceptOrder.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-/// مساعد قاعدة البيانات المحلية
-/// يدير جميع عمليات CRUD للطلبات المعلقة
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
@@ -26,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2, // زيادة رقم الإصدار
+      version: 2,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -68,7 +66,6 @@ class DatabaseHelper {
     print('✅ Database created successfully');
   }
 
-  /// ترقية قاعدة البيانات
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       // إضافة جدول pending_accept_orders
@@ -105,7 +102,7 @@ class DatabaseHelper {
     return order.copyWith(id: id);
   }
 
-  /// قراءة طلب معين بالمعرف
+  /// قراءة طلب معين
   Future<PendingOrder?> read(int id) async {
     final db = await database;
 
@@ -186,10 +183,7 @@ class DatabaseHelper {
     return Sqflite.firstIntValue(result) ?? 0;
   }
 
-  // ============================================
   // دوال جدول pending_accept_orders
-  // ============================================
-
   /// إضافة عملية قبول طلب معلقة
   Future<PendingAcceptOrder> createAcceptOrder(PendingAcceptOrder order) async {
     final db = await database;
@@ -204,7 +198,7 @@ class DatabaseHelper {
     return order.copyWith(id: id);
   }
 
-  /// قراءة عملية قبول معينة بالمعرف
+  /// قراءة عملية قبول معينة
   Future<PendingAcceptOrder?> readAcceptOrder(int id) async {
     final db = await database;
 

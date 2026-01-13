@@ -5,7 +5,7 @@ import 'package:fill_go/Helpers/font_helper.dart';
 import 'package:fill_go/Modules/Main/Home/home_controller.dart';
 import 'package:get/get.dart';
 
-/// شاشة الإشعارات الموحدة - تُظهر شاشة واحدة بناءً على نوع المستخدم
+/// شاشة الإشعارات بناءً على نوع المستخدم
 class CombinedNotificationsScreen extends StatelessWidget {
   const CombinedNotificationsScreen({super.key});
 
@@ -13,7 +13,8 @@ class CombinedNotificationsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // الحصول على نوع المستخدم
     final homeController = Get.find<HomeController>();
-    // userType: 2 = مقاول (يضيف طلبات)، 1 = مراقب (يقبل طلبات)
+    // userType: 2 = (مفتش (يضيف طلبات،
+    // userType: 1 = مراقب (يقبل طلبات)
     final isContractor = homeController.isContractor;
 
     return Scaffold(

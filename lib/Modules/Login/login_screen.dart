@@ -22,15 +22,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // TextEditingController myEmailController = TextEditingController();
-  // TextEditingController myPasswordController = TextEditingController();
   final formKey = GlobalKey<FormState>();
   final loginController = Get.put(LoginController());
 
   @override
   void dispose() {
-    // myEmailController.dispose();
-    // myPasswordController.dispose();
     super.dispose();
   }
 
@@ -44,8 +40,6 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: false,
-
-      // resizeToAvoidBottomInset: false,
       backgroundColor: AssetsColors.color_screen_background,
       body: initBody(formKey),
     );
@@ -128,17 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          SizedBox(height: 8.h),
-                          // Text(
-                          //   'مرحباً بك في Fill Go',
-                          //   style: TextStyle(
-                          //     color: Colors.grey.shade600,
-                          //     fontSize: 14.sp,
-                          //     fontFamily: AssetsHelper.FONT_Avenir,
-                          //   ),
-                          //   textAlign: TextAlign.center,
-                          // ),
-                          SizedBox(height: 32.h),
+                          SizedBox(height: 40.h),
                           _buildLabel('اسم المستخدم'),
                           SizedBox(height: 10.h),
                           MyTextField(
@@ -221,7 +205,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void handleLoginClick() async {
-    // Get.offAll(() => HomeScreen());
     if (formKey.currentState!.validate()) {
       Map<String, dynamic> map = {};
       map["user_name"] = loginController.myIDController.text;
@@ -241,12 +224,8 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         // نستخدم AuthController لتحديث حالة المستخدم
         final authController = Get.find<AuthController>();
-        authController.setCurrentUser(user); // ✅ يضع isLoggedIn = true تلقائيًا
+        authController.setCurrentUser(user);
         authController.storageService?.saveCurrentUser(user); // حفظ محلي
-        // ✅ التوجيه بناءً على userType باستخدام الدالة الجاهزة
-        // final route = authController.getHomeRoute();
-        // Get.offNamed(route);
-
         Get.offAllNamed(AppPages.home);
       }
     }

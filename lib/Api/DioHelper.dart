@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart' as dioPackage;
 import 'package:dio/dio.dart' as dioFormData;
-
 import 'package:flutter/material.dart';
 import '../App/app.dart';
 import 'package:get/get.dart' hide FormData, Response;
@@ -15,7 +14,6 @@ String token = "";
 dioPackage.Dio DioHelper({bool isGazaCityBaseURL = false}) {
   dioPackage.Dio _dio = dioPackage.Dio();
   _dio.options.responseType = dioPackage.ResponseType.json;
-  // زيادة الـ timeout للعمل بشكل أفضل مع Mobile Data (أبطأ من WiFi)
   _dio.options.connectTimeout = const Duration(seconds: 60);
   _dio.options.receiveTimeout = const Duration(seconds: 60);
   _dio.options.sendTimeout = const Duration(seconds: 60);
@@ -36,7 +34,6 @@ dioPackage.Dio DioHelper({bool isGazaCityBaseURL = false}) {
   return _dio;
 }
 
-// DioHelperApi مع baseUrl
 dioPackage.Dio DioHelperApi({String baseUrl = Constants.baseUrlMapps}) {
   dioPackage.Dio _dio = dioPackage.Dio(
     dioPackage.BaseOptions(
@@ -45,7 +42,7 @@ dioPackage.Dio DioHelperApi({String baseUrl = Constants.baseUrlMapps}) {
       connectTimeout: const Duration(seconds: 60),
       receiveTimeout: const Duration(seconds: 60),
       sendTimeout: const Duration(seconds: 60),
-      followRedirects: false, // منع التحويل التلقائي
+      followRedirects: false,
       validateStatus: (status) => status != null && status < 500,
     ),
   );
@@ -77,11 +74,9 @@ _dioInterceptor() => dioPackage.InterceptorsWrapper(
     handler.next(options);
   },
   onResponse: (response, handler) async {
-    // التقاط 401 أو 403 أو رسائل انتهاء صلاحية التوكن
     bool unauthorized =
         response.statusCode == 401 || response.statusCode == 403;
 
-    // التحقق من 302 redirect إلى redirect_if_not_auth
     if (response.statusCode == 302 || response.statusCode == 301) {
       final location = response.headers.value('location');
       if (location != null && location.contains('redirect_if_not_auth')) {
@@ -99,7 +94,6 @@ _dioInterceptor() => dioPackage.InterceptorsWrapper(
         msg = (data['message'] ?? data['msg'] ?? data['error'])?.toString();
       } else if (data is String) {
         msg = data;
-        // التحقق من HTML redirect في الاستجابة
         if (msg.contains('redirect_if_not_auth') ||
             msg.contains('Redirecting to')) {
           print('❌ تم اكتشاف HTML redirect في الاستجابة - التوكن منتهي');
@@ -115,7 +109,6 @@ _dioInterceptor() => dioPackage.InterceptorsWrapper(
           unauthorized = true;
         }
       }
-      // التحقق من WWW-Authenticate في الهيدر
       final www = response.headers.value('www-authenticate')?.toLowerCase();
       if (www != null && www.contains('bearer')) {
         unauthorized = true;
@@ -125,7 +118,6 @@ _dioInterceptor() => dioPackage.InterceptorsWrapper(
     if (unauthorized) {
       print('❌ تم اكتشاف استجابة غير مصرح بها ($unauthorized) (onResponse)');
 
-      // تجنب التكرار إذا تم الخروج بالفعل
       if (Get.currentRoute == '/login') {
         return handler.reject(
           dioPackage.DioException(

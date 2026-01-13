@@ -25,7 +25,6 @@ class DioExceptions implements Exception {
         );
         break;
       case DioExceptionType.badResponse:
-        // message =
         message = "خطأ في الإستجابة ${DioException.response?.data['message']}";
         break;
       case DioExceptionType.sendTimeout:
@@ -40,7 +39,6 @@ class DioExceptions implements Exception {
     }
     if (isPopupLoading && Get.isDialogOpen!) Get.back();
     SnackBarHelper.show(msg: message);
-    // Get.snackbar("Error", message);
   }
 
   String _handleError(int? statusCode, dynamic error) {
@@ -60,8 +58,6 @@ class DioExceptions implements Exception {
         {
           return error['message'];
         }
-        //'Internal server error'
-        return 'Internal server error';
       case 502:
         return 'Bad gateway';
       default:

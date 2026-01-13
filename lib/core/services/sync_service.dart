@@ -1,13 +1,10 @@
 import 'dart:async';
 import 'package:fill_go/Api/Repo/requests_repo.dart';
-import 'package:fill_go/Model/PendingOrder.dart';
 import 'package:fill_go/core/database/database_helper.dart';
 import 'package:fill_go/core/services/connectivity_service.dart';
-import 'package:fill_go/Modules/Main/Home/home_controller.dart';
 import 'package:get/get.dart';
 
-/// خدمة المزامنة التلقائية
-/// تقوم برفع الطلبات المعلقة عند استعادة الاتصال
+///  (المزامنة التلقائية) تقوم برفع الطلبات المعلقة عند استعادة الاتصال
 class SyncService extends GetxService {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   final ConnectivityService _connectivityService = ConnectivityService.to;
@@ -40,9 +37,10 @@ class SyncService extends GetxService {
 
   /// تحديث عداد الطلبات المعلقة
   Future<void> updatePendingCount() async {
-    // نحسب جميع الطلبات الموجودة محلياً بغض النظر عن حالتها
-    final newOrdersCount = await _dbHelper.getCount();
-    final acceptOrdersCount = await _dbHelper.getAcceptOrdersCount();
+    final newOrdersCount = await _dbHelper.getCountByStatus('pending');
+    final acceptOrdersCount = await _dbHelper.getAcceptOrdersCountByStatus(
+      'pending',
+    );
     pendingCount.value = newOrdersCount + acceptOrdersCount;
   }
 
@@ -78,21 +76,34 @@ class SyncService extends GetxService {
 
   /// مزامنة الطلبات الجديدة المعلقة
   Future<void> _syncNewOrders() async {
-    try {
-      // جلب جميع الطلبات المحلية بغض النظر عن الحالة لإعادة المحاولة
-      final allOrders = await _dbHelper.readAll();
+    if (isSyncing.value) {
+      print('⏳ Sync already in progress...');
+      return;
+    }
 
-      if (allOrders.isEmpty) {
+    if (!_connectivityService.isOnline.value) {
+      print('📵 No internet connection, skipping sync');
+      return;
+    }
+
+    isSyncing.value = true;
+
+    try {
+      // جلب جميع الطلبات المعلقة
+      final pendingOrders = await _dbHelper.readByStatus('pending');
+
+      if (pendingOrders.isEmpty) {
         print('✅ No pending orders to sync');
+        isSyncing.value = false;
         return;
       }
 
-      print('🔄 Syncing ${allOrders.length} pending orders...');
+      print('🔄 Syncing ${pendingOrders.length} pending orders...');
 
       int successCount = 0;
       int failCount = 0;
 
-      for (var order in allOrders) {
+      for (var order in pendingOrders) {
         // تحديث الحالة إلى "syncing"
         await _dbHelper.update(order.copyWith(syncStatus: 'syncing'));
 
@@ -128,11 +139,8 @@ class SyncService extends GetxService {
         }
       }
 
-      // تحديث قوائم Home Controller
-      if (Get.isRegistered<HomeController>()) {
-        final homeController = Get.find<HomeController>();
-        homeController.getOrders();
-      }
+      // تحديث العداد
+      await updatePendingCount();
 
       // إظهار نتيجة المزامنة
       if (successCount > 0) {
@@ -153,88 +161,124 @@ class SyncService extends GetxService {
         );
       }
     } catch (e) {
-      print('❌ Sync service error during new orders sync: $e');
+      print('❌ Sync service error: $e');
+    } finally {
+      isSyncing.value = false;
     }
   }
 
   /// مزامنة عمليات قبول الطلبات المعلقة
   Future<void> _syncAcceptOrders() async {
-    try {
-      // جلب جميع عمليات القبول المحلية بغض النظر عن الحالة
-      final allAcceptOrders = await _dbHelper.readAllAcceptOrders();
+    // جلب جميع عمليات القبول المعلقة
+    final pendingAcceptOrders = await _dbHelper.readAcceptOrdersByStatus(
+      'pending',
+    );
 
-      if (allAcceptOrders.isEmpty) {
-        print('✅ No pending accept orders to sync');
-        return;
-      }
+    if (pendingAcceptOrders.isEmpty) {
+      print('✅ No pending accept orders to sync');
+      return;
+    }
 
-      print('🔄 Syncing ${allAcceptOrders.length} pending accept orders...');
+    print('🔄 Syncing ${pendingAcceptOrders.length} pending accept orders...');
 
-      int successCount = 0;
-      int failCount = 0;
+    int successCount = 0;
+    int failCount = 0;
 
-      for (var acceptOrder in allAcceptOrders) {
-        // تحديث الحالة إلى "syncing"
-        await _dbHelper.updateAcceptOrder(
-          acceptOrder.copyWith(syncStatus: 'syncing'),
+    for (var acceptOrder in pendingAcceptOrders) {
+      // تحديث الحالة إلى "syncing"
+      await _dbHelper.updateAcceptOrder(
+        acceptOrder.copyWith(syncStatus: 'syncing'),
+      );
+
+      try {
+        // محاولة رفع عملية القبول للسيرفر
+        final response = await RequestsRepo.instance.postProcessOrder(
+          body: acceptOrder.toServerFormat(),
         );
 
-        try {
-          // محاولة رفع عملية القبول للسيرفر
-          final response = await RequestsRepo.instance.postProcessOrder(
-            body: acceptOrder.toServerFormat(),
-          );
-
-          if (response.status == true) {
-            // نجحت العملية - حذف من قاعدة البيانات المحلية
-            await _dbHelper.deleteAcceptOrder(acceptOrder.id!);
-            successCount++;
-
-            // تحديث قوائم Home Controller
-            if (Get.isRegistered<HomeController>()) {
-              final homeController = Get.find<HomeController>();
-              homeController.getOrders();
-            }
-
-            print('✅ Accept order ${acceptOrder.id} synced successfully');
-          } else {
-            // فشلت العملية - تحديث الحالة
-            await _dbHelper.updateAcceptOrder(
-              acceptOrder.copyWith(
-                syncStatus: 'failed',
-                errorMessage: response.message ?? 'Unknown error',
-              ),
-            );
-            failCount++;
-            print(
-              '❌ Accept order ${acceptOrder.id} sync failed: ${response.message}',
-            );
-          }
-        } catch (e) {
-          // خطأ في الاتصال
+        if (response.status == true) {
+          // نجحت العملية - حذف من قاعدة البيانات المحلية
+          await _dbHelper.deleteAcceptOrder(acceptOrder.id!);
+          successCount++;
+          print('✅ Accept order ${acceptOrder.id} synced successfully');
+        } else {
+          // فشلت العملية - تحديث الحالة
           await _dbHelper.updateAcceptOrder(
             acceptOrder.copyWith(
               syncStatus: 'failed',
-              errorMessage: e.toString(),
+              errorMessage: response.message ?? 'Unknown error',
             ),
           );
           failCount++;
-          print('❌ Accept order ${acceptOrder.id} sync error: $e');
+          print(
+            '❌ Accept order ${acceptOrder.id} sync failed: ${response.message}',
+          );
         }
-      }
-
-      // إظهار نتيجة المزامنة
-      if (successCount > 0) {
-        Get.snackbar(
-          'تمت المزامنة',
-          'تم قبول $successCount طلب بنجاح',
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 3),
+      } catch (e) {
+        // خطأ في الاتصال
+        await _dbHelper.updateAcceptOrder(
+          acceptOrder.copyWith(
+            syncStatus: 'failed',
+            errorMessage: e.toString(),
+          ),
         );
+        failCount++;
+        print('❌ Accept order ${acceptOrder.id} sync error: $e');
+      }
+    }
+
+    // إظهار نتيجة المزامنة
+    if (successCount > 0) {
+      Get.snackbar(
+        'تمت المزامنة',
+        'تم قبول $successCount طلب بنجاح',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+      );
+    }
+
+    if (failCount > 0) {
+      Get.snackbar(
+        'فشلت بعض العمليات',
+        'فشل قبول $failCount طلب. سيتم المحاولة لاحقاً',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+      );
+    }
+  }
+
+  /// محاولة مزامنة طلب واحد يدوياً
+  Future<bool> syncSingleOrder(int orderId) async {
+    try {
+      final order = await _dbHelper.read(orderId);
+      if (order == null) return false;
+
+      await _dbHelper.update(order.copyWith(syncStatus: 'syncing'));
+
+      final response = await RequestsRepo.instance.postStoreOrder(
+        body: order.toServerFormat(),
+      );
+
+      if (response.status == true) {
+        await _dbHelper.delete(orderId);
+        await updatePendingCount();
+        return true;
+      } else {
+        await _dbHelper.update(
+          order.copyWith(syncStatus: 'failed', errorMessage: response.message),
+        );
+        return false;
       }
     } catch (e) {
-      print('❌ Sync service error during accept orders sync: $e');
+      print('Error syncing single order: $e');
+      return false;
     }
+  }
+
+  /// حذف طلب معلق
+  Future<void> deletePendingOrder(int orderId) async {
+    await _dbHelper.delete(orderId);
+    await updatePendingCount();
   }
 
   @override
@@ -242,4 +286,7 @@ class SyncService extends GetxService {
     _connectivitySubscription?.cancel();
     super.onClose();
   }
+
+  /// Singleton instance
+  static SyncService get to => Get.find<SyncService>();
 }

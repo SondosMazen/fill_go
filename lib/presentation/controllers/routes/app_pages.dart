@@ -12,7 +12,6 @@ abstract class AppPages {
   static const String splash = '/launch_screen';
   static const String login = '/login_screen';
   static const String home = '/home_screen';
-  static const String constractor = '/constractor_screen';
   static const String pendingOrders = '/pending-orders';
 
   /// صفحات التطبيق

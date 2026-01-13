@@ -2,8 +2,7 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
 
-/// خدمة مراقبة حالة الاتصال بالإنترنت
-/// تستخدم connectivity_plus لمراقبة التغييرات في حالة الاتصال
+/// مراقبة حالة الاتصال بالإنترنت
 class ConnectivityService extends GetxService {
   final Connectivity _connectivity = Connectivity();
 
@@ -53,7 +52,6 @@ class ConnectivityService extends GetxService {
     final wasOnline = isOnline.value;
     isOnline.value = hasConnection;
 
-    // طباعة التغيير في الحالة للتتبع
     if (wasOnline != hasConnection) {
       // تحديد نوع الاتصال
       String connectionType = 'غير معروف';
@@ -69,7 +67,7 @@ class ConnectivityService extends GetxService {
         '🌐 Connectivity changed: ${hasConnection ? "ONLINE ($connectionType)" : "OFFLINE"}',
       );
 
-      // يمكن إضافة إشعار للمستخدم هنا
+      // إضافة إشعار للمستخدم هنا
       if (hasConnection) {
         Get.snackbar(
           'متصل',

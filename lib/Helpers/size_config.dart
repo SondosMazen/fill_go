@@ -1,5 +1,3 @@
-// import 'package:flutter/material.dart';
-
 import 'package:flutter/cupertino.dart';
 
 class SizeConfig {
@@ -52,9 +50,6 @@ class SizeConfig {
   }
 
   double scaleHeight(double height) {
-    //scale = 20 / 8.12 = 2.4630541871921
-    //7.4 * scale
-
     double scale = height / _designHeight;
     return (_heightMultiplier * scale);
   }

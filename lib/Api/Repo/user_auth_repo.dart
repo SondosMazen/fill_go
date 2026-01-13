@@ -1,48 +1,23 @@
-import 'dart:collection';
 import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:fill_go/Api/Controllers/user_auth_controller.dart';
-// import 'package:fill_go/Model/TMynotification.dart';
 import 'package:fill_go/Model/TUser.dart';
-
 import '../BaseResponse.dart';
-// import '../Controllers/users_controller.dart';
 import '../DioExceptions.dart';
 
 class UserAuthRepo {
   static var instance = UserAuthRepo();
-  // Response? response;
-
-
-//   Future<BaseResponse<TUser>> postLogin(Map<String, dynamic> map) async {
-//     BaseResponse<TUser> baseResponse;
-//     try {
-//       Response response = await UserAuthController.postUserAuthLogin(
-//         body: map,
-//       );
-//
-//       baseResponse = BaseResponse<TUser>().fromJson(
-// response.data
-//       );
-//     } on DioException catch (e) {
-//       final errorMessage = DioExceptions.fromDioException(e).toString();
-//       throw errorMessage;
-//     }
-//     return baseResponse;
-//   }
-
 
   Future<BaseResponse<TUser>> postLogin(Map<String, dynamic> map) async {
     BaseResponse<TUser> baseResponse;
     try {
       Response response = await UserAuthController.postUserAuthLogin(body: map);
 
-      // إذا response.data يحتوي على errors (مثل اسم المستخدم غير موجود)
+      // (مثلا اسم المستخدم غير موجود)
       if (response.data != null &&
           response.data is Map &&
           response.data.containsKey("errors")) {
-        throw jsonEncode(response.data); // ترميز JSON لإرسال الرسالة كاملة
+        throw jsonEncode(response.data);
       }
 
       // حالة كلمة المرور غير صحيحة
@@ -68,18 +43,6 @@ class UserAuthRepo {
     return baseResponse;
   }
 
-  // Future<void>? postUserAuthLogOut({
-  //   Map<String, dynamic>? body,
-  //   Map<String, dynamic>? query,
-  // }) async {
-  //   Response response = await UserAuthController.postUserAuthLogOut(
-  //     body: body,
-  //     query: query,
-  //   );
-  //   // BaseResponse<String> baseResponse = response.data['message'];
-  //   // return baseResponse;
-  // }
-
   Future<BaseResponse<String>> Logout(Map<String, dynamic> map) async {
     BaseResponse<String> baseResponse;
     try {
@@ -91,6 +54,4 @@ class UserAuthRepo {
     }
     return baseResponse;
   }
-
-
 }

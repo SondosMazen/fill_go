@@ -1,7 +1,6 @@
 import 'package:fill_go/Model/BaseModel.dart';
 
-/// نموذج الطلب المعلق (Pending Order)
-/// يُستخدم لحفظ الطلبات محلياً عند عدم توفر الإنترنت
+///(Pending Order) يُستخدم لحفظ الطلبات محلياً عند عدم توفر الإنترنت
 class PendingOrder extends BaseModel {
   int? id; // معرف محلي في قاعدة البيانات
   String? location;

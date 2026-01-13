@@ -83,7 +83,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               } catch (e) {
-                // إذا لم تكن الخدمة متوفرة، أظهر الأيقونة بدون badge
                 return IconButton(
                   icon: const Icon(
                     Icons.notifications_outlined,

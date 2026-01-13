@@ -1,14 +1,11 @@
 import 'dart:convert';
 import 'dart:developer';
-
 import 'package:get/get.dart';
 import 'package:fill_go/Modules/Main/Home/home_controller.dart';
 import 'package:fill_go/Api/BaseResponse.dart';
 import 'package:fill_go/Api/Repo/requests_repo.dart';
-import 'package:fill_go/App/app.dart';
 import 'package:fill_go/Helpers/DialogHelper.dart';
 import 'package:fill_go/Model/TDriver.dart';
-import 'package:fill_go/Model/TOrder.dart';
 import 'package:fill_go/Model/TSite.dart';
 import 'package:fill_go/Model/PendingOrder.dart';
 import 'package:fill_go/Model/PendingAcceptOrder.dart';
@@ -45,10 +42,7 @@ class AddRequestController extends BaseGetxController {
     super.onInit();
   }
 
-  /// تحميل رقم السيارة التالي المحفوظ
-  /// تم تعطيل هذه الميزة - الحقل يبقى فارغاً للإدخال اليدوي
   Future<void> loadNextCarNum() async {
-    // تم تعطيل التحميل التلقائي - المستخدم يدخل الرقم يدوياً
     carNumberController.text = '';
   }
 
@@ -65,7 +59,7 @@ class AddRequestController extends BaseGetxController {
         log('تم تحميل ${tDrivers?.length} سائق من الكاش');
       }
 
-      // تحميل قائمة المواقع
+      // تحميل قائمة مواقع التفريغ
       final sitesJson = prefs.getString('cached_sites');
       if (sitesJson != null) {
         final List<dynamic> sitesList = jsonDecode(sitesJson);
@@ -181,7 +175,7 @@ class AddRequestController extends BaseGetxController {
             actions: [
               TextButton(
                 onPressed: () {
-                  Get.back(); // إغلاق Dialog
+                  Get.back();
                   Get.back(result: true); // الرجوع للشاشة السابقة
                 },
                 child: Text('حسناً'),
@@ -207,16 +201,13 @@ class AddRequestController extends BaseGetxController {
     }
   }
 
-  /// زيادة رقم السيارة المحفوظ
-  /// تم تعطيل هذه الميزة - لا حاجة لزيادة الرقم تلقائياً
   Future<void> _incrementCarNum() async {
-    // تم تعطيل هذه الميزة
   }
 
   bool isAccepting = false;
 
   Future<bool> acceptOrder(String orderId) async {
-    // منع التكرار (Double Tap)
+    // منع التكرار عند الضغط ع زر قبول الطلب في حالة اوفلاين (Double Tap)
     if (isAccepting) return false;
     isAccepting = true;
 
@@ -280,7 +271,7 @@ class AddRequestController extends BaseGetxController {
 
           await dbHelper.createAcceptOrder(pendingAcceptOrder);
 
-          // تحديث القائمة في HomeController فوراً لتنعكس في الواجهة
+          // تحديث القائمة في الواجهة
           if (Get.isRegistered<HomeController>()) {
             await Get.find<HomeController>().loadLocalAcceptedOrderIds();
           }
@@ -355,7 +346,6 @@ class AddRequestController extends BaseGetxController {
       log('لا يوجد اتصال - استخدام البيانات المحفوظة للسائقين');
       return tDrivers;
     }
-    // إذا لم يكن هناك اتصال والبيانات فارغة، أو إذا كان هناك اتصال، حاول الجلب من السيرفر
 
     // محاولة جلب البيانات من السيرفر
     setLoading(true);
@@ -364,7 +354,6 @@ class AddRequestController extends BaseGetxController {
     setLoading(false);
 
     if (checkResponse(response, showPopup: false)) {
-      // في حالة الفشل، استخدم البيانات المحفوظة
       log('فشل جلب السائقين من السيرفر - استخدام البيانات المحفوظة');
       return tDrivers;
     }
@@ -384,19 +373,16 @@ class AddRequestController extends BaseGetxController {
     // التحقق من الاتصال بالإنترنت
     final connectivityService = Get.find<ConnectivityService>();
 
-    // إذا لم يكن هناك اتصال، ولدينا بيانات محفوظة، استخدمها
     if (!connectivityService.isOnline.value && (tSites?.isNotEmpty ?? false)) {
       log('لا يوجد اتصال - استخدام البيانات المحفوظة للمواقع');
       return tSites;
     }
-    // حاول الجلب من السيرفر في غير ذلك
 
     // محاولة جلب البيانات من السيرفر
     BaseResponse<List<TSite>>? response = await RequestsRepo.instance
         .getSites();
 
     if (checkResponse(response, showPopup: false)) {
-      // في حالة الفشل، استخدم البيانات المحفوظة
       log('فشل جلب المواقع من السيرفر - استخدام البيانات المحفوظة');
       return tSites;
     }

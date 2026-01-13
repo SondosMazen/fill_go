@@ -5,23 +5,9 @@ class StorageService extends GetxService {
   static const String _authTokenKey = 'auth_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _currentUserKey = 'current_user';
-  static const String _appLanguageKey = 'app_language';
-  static const String _appThemeKey = 'app_theme';
-  static const String _notificationSettingsKey = 'notification_settings';
-  static const String _permissionsKey = 'permissions';
-  static const String _complaintsKey = 'complaints_cache';
-  static const String _groupsKey = 'groups_cache';
-  static const String _itemsKey = 'items_cache';
-  static const String _offlineActionsKey = 'offline_actions';
-  static const String _mapCacheKey = 'map_cache';
-  static const String _searchHistoryKey = 'search_history';
-  static const String _appStateKey = 'app_state';
-  static const String _performanceMetricsKey = 'performance_metrics';
-  static const String _userPreferencesKey = 'user_preferences';
 
   late GetStorage _box;
 
-  // تعديل الدالة لترجع Future<StorageService>
   Future<StorageService> init() async {
     await GetStorage.init();
     _box = GetStorage();
@@ -36,8 +22,6 @@ class StorageService extends GetxService {
     _box = GetStorage();
     print('✅ تم تهيئة StorageService في onInit');
   }
-
-  // === إدارة المصادقة ===
 
   // حفظ التوكن
   Future<void> saveAuthToken(String token) async {
@@ -103,8 +87,6 @@ class StorageService extends GetxService {
     print('🧹 تم مسح بيانات المصادقة');
   }
 
-  // === دوال مساعدة عامة ===
-
   // قراءة قيمة عامة
   T? read<T>(String key) {
     return _box.read<T>(key);
@@ -124,5 +106,4 @@ class StorageService extends GetxService {
   bool hasData(String key) {
     return _box.hasData(key);
   }
-
 }

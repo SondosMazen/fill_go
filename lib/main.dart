@@ -26,8 +26,6 @@ class MyHttpOverrides extends HttpOverrides {
   }
 }
 
-// late ObjectBox objectbox;
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 

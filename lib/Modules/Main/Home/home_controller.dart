@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:developer';
-
 import 'package:fill_go/Api/Repo/requests_repo.dart';
 import 'package:fill_go/App/Constant.dart';
 import 'package:fill_go/App/app.dart';
@@ -13,11 +12,8 @@ import 'package:fill_go/core/services/sync_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_select_items/flutter_multi_select_items.dart';
 import 'package:get/get.dart';
-// import 'package:fill_go/Api/Repo/news_adv_repo.dart';
-// import 'package:fill_go/Model/TMynotification.dart';
 import 'package:fill_go/Modules/Base/BaseGetxController.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../../Api/BaseResponse.dart';
 import '../../../presentation/controllers/controllers/auth_controller.dart';
 
@@ -32,9 +28,7 @@ class HomeController extends BaseGetxController {
   List<TOrder> pendingOrders = [];
   List<TOrder> acceptedOrders = [];
 
-  // List<Map<String, dynamic>> data_ref=[] ;
   bool isloadNotification = false;
-  // static HomeController get to => Get.find<HomeController>();
   bool isUser = false;
   List<TOrder>? tOrder;
   String? acceptOrderMsg;
@@ -115,7 +109,6 @@ class HomeController extends BaseGetxController {
           .getOrders();
 
       if (checkResponse(response)) {
-        // في حالة الفشل، استخدم البيانات المحفوظة
         log('فشل جلب الطلبات من السيرفر - استخدام البيانات المحفوظة');
         return tOrder;
       }
@@ -157,8 +150,6 @@ class HomeController extends BaseGetxController {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // محاولة الحصول على car_num من الـ response
-      // قد يكون في response.msg أو response.items أو response.message
       String? carNum;
 
       // إذا كان car_num في response.msg

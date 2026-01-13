@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../Helpers/assets_color.dart';
 import '../Utils/utils.dart';
-
 import '../App/app.dart';
 
 class DialogHelper {
@@ -26,15 +25,6 @@ class DialogHelper {
                 confirmButtonText: 'ok',
                 onConfirm: submit)));
 
-    // ArtSweetAlert.show(
-    //     context: Application.navigatorKey.currentState!.context,
-    //     artDialogArgs: ArtDialogArgs(
-    //         type: type,
-    //         title: title,
-    //         text: description == '' ? null : description,
-    //         confirmButtonColor: AssetsColors.green,
-    //         confirmButtonText: Utils.getString().ok,
-    //         onConfirm: submit));
   }
 
   static void showDialogWithCancelBtn(
@@ -81,80 +71,13 @@ class DialogHelper {
         
             )
 
-        // ArtDialogArgs(
-        //     // confirmButtonText: 'إلغاء',
-        //     // onConfirm: () {
-        //     //   Navigator.pop(Application.navigatorKey.currentState!.context);
-        //     //   Get.close(1);
-        //     // },
-        //     customColumns: [
-        //     ]
-        //     // type: ArtSweetAlertType.info
-        //     ),
         );
-
-    // ArtDialog(
-    //   artDialogArgs: ArtDialogArgs(
-    //       confirmButtonText: 'إلغاء',
-    //       onConfirm: () {
-    //         Navigator.pop(Application.navigatorKey.currentState!.context);
-    //         Get.close(1);
-    //       },
-    //       customColumns: [
-    //         Padding(
-    //           padding: const EdgeInsets.all(16.0),
-    //           child: Column(
-    //             mainAxisSize: MainAxisSize.min,
-    //             children: [
-    //               CircularProgressIndicator(
-    //                 color: AssetsColors.green,
-    //               ),
-    //               const SizedBox(height: 8),
-    //               Text(
-    //                 message ?? 'انتظر...',
-    //                 style: AppTextStyles.getRegularTextStyle(
-    //                     colorValue: AssetsColors.color_text_black_392C23),
-    //               ),
-    //             ],
-    //           ),
-    //         ),
-    //       ]
-    //       // type: ArtSweetAlertType.info
-    //       ),
-    // );
-
-    // Get.dialog(
-    //   Dialog(
-    //     child: Padding(
-    //       padding: const EdgeInsets.all(16.0),
-    //       child: Column(
-    //         mainAxisSize: MainAxisSize.min,
-    //         children: [
-    //           CircularProgressIndicator(
-    //             color: AssetsColors.green,
-    //           ),
-    //           const SizedBox(height: 8),
-    //           Text(
-    //             message ?? 'انتظر...',
-    //             style: AppTextStyles.getRegularTextStyle(
-    //                 colorValue: AssetsColors.color_text_black_392C23),
-    //           ),
-    //         ],
-    //       ),
-    //     ),
-    //   ),
-    // );
   }
+
   //hide loading
   static void hideLoading() {
-    // log('message  from hide  ${Get.isDialogOpen!}');
     Navigator.of(Application.navigatorKey.currentState!.context,
             rootNavigator: true)
         .pop();
-    // Navigator.canPop(Application.navigatorKey.currentState!.context);
-    // Navigator.canPop(Get.context!);
-    // Get.back();
-    // Get.close(1);
-    // if (Get.isDialogOpen!) Get.back();
   }
 }

@@ -1,7 +1,4 @@
-import 'dart:developer';
-
 import 'package:get/get.dart';
-
 import '../../Api/BaseResponse.dart';
 import '../../Helpers/DialogHelper.dart';
 
@@ -11,7 +8,6 @@ class BaseGetxController extends GetxController {
 
   void setLoading(bool show) {
     _isLoading.value = show;
-    // update();
   }
 
   List<int> dummyList = [0, 1, 2, 3, 4, 5];

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import 'assets_color.dart';
 
 class FontsAppHelper {
@@ -60,7 +59,6 @@ class FontsAppHelper {
     );
   }
 
-  // Keep old names for backward compatibility if needed, but point them to Cairo
   TextStyle avenirArabicMediumFont({
     int size = -1,
     Color color = blackColor,

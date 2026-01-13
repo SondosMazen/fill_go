@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../Model/TUser.dart';
 
 class ApiService extends GetxService {
-  // تكوين الخادم بناءً على النظام الأساسي
   static String get baseUrl {
     if (kIsWeb) {
       return 'http://localhost:8000/api';
@@ -12,7 +11,6 @@ class ApiService extends GetxService {
       // للأندرويد إيمولايتر
       return 'http://10.0.2.2:8000/api';
       // للأجهزة الفعلية، استخدم IP الجهاز المحلي:
-      // return 'http://10.30.20.254:8000/api';
     }
   }
 

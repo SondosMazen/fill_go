@@ -1,6 +1,4 @@
-import 'dart:collection';
 import 'dart:developer';
-
 import 'package:dio/dio.dart';
 import 'package:fill_go/Api/Controllers/requests_controller.dart';
 import 'package:fill_go/Api/DioExceptions.dart';
@@ -8,10 +6,7 @@ import 'package:fill_go/Helpers/DialogHelper.dart';
 import '../../Model/TSite.dart';
 import '../../Model/TDriver.dart';
 import '../../Model/TOrder.dart';
-import '../../Model/TSite.dart';
-
 import '../BaseResponse.dart';
-import '../Controllers/requests_controller.dart';
 
 class RequestsRepo {
   static var instance = RequestsRepo();
@@ -26,9 +21,7 @@ class RequestsRepo {
       baseResponse = BaseResponse<List<TSite>>().fromJson(response.data);
       log('the base response don ${baseResponse.data}');
     } catch (e) {
-      // DialogHelper.hideLoading();
       log('message $e');
-      // final errorMessage = DioExceptions.fromDioException('$e').toString();
       throw '$e';
     }
     return baseResponse;
@@ -44,9 +37,7 @@ class RequestsRepo {
       baseResponse = BaseResponse<List<TDriver>>().fromJson(response.data);
       log('the base response don ${baseResponse.data}');
     } catch (e) {
-      // DialogHelper.hideLoading();
       log('message $e');
-      // final errorMessage = DioExceptions.fromDioException('$e').toString();
       throw '$e';
     }
     return baseResponse;
@@ -63,9 +54,7 @@ class RequestsRepo {
       baseResponse = BaseResponse<List<TOrder>>().fromJson(response.data);
       log('the base response don');
     } catch (e) {
-      // DialogHelper.hideLoading();
       log('message $e');
-      // final errorMessage = DioExceptions.fromDioException('$e').toString();
       throw '$e';
     }
     return baseResponse;

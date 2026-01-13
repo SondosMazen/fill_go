@@ -4,8 +4,6 @@ import 'package:fill_go/Helpers/assets_color.dart';
 import 'package:fill_go/Utils/utils.dart';
 
 class SnackBarHelper {
-  // Find the ScaffoldMessenger in the widget tree
-  // and use it to show a SnackBar.
   static void show({String msg = "قيد التطوير", Color? backgroundColor}) {
     ScaffoldMessenger.of(Application.navigatorKey.currentContext!).showSnackBar(
       SnackBar(
