@@ -8,6 +8,7 @@ class PendingAcceptOrder extends BaseModel {
   String? createdAt;
   String? syncStatus; // 'pending', 'syncing', 'failed', 'success'
   String? errorMessage; // رسالة الخطأ في حالة فشل المزامنة
+  String? processDate; // تاريخ ووقت المعالجة
 
   PendingAcceptOrder({
     this.id,
@@ -16,6 +17,7 @@ class PendingAcceptOrder extends BaseModel {
     this.createdAt,
     this.syncStatus = 'pending',
     this.errorMessage,
+    this.processDate,
   });
 
   /// تحويل من Map (من قاعدة البيانات)
@@ -27,6 +29,7 @@ class PendingAcceptOrder extends BaseModel {
       createdAt: map['created_at'] as String?,
       syncStatus: map['sync_status'] as String? ?? 'pending',
       errorMessage: map['error_message'] as String?,
+      processDate: map['process_date'] as String?,
     );
   }
 
@@ -39,12 +42,17 @@ class PendingAcceptOrder extends BaseModel {
       'created_at': createdAt,
       'sync_status': syncStatus,
       'error_message': errorMessage,
+      'process_date': processDate,
     };
   }
 
   /// تحويل إلى صيغة السيرفر (للإرسال عبر API)
   Map<String, dynamic> toServerFormat() {
-    return {'order_oid': orderOid, 'notes': notes ?? 'تم قبول الطلب'};
+    return {
+      'order_oid': orderOid,
+      'notes': notes ?? 'تم قبول الطلب',
+      'process_date': processDate,
+    };
   }
 
   /// نسخ مع تعديلات
@@ -55,6 +63,7 @@ class PendingAcceptOrder extends BaseModel {
     String? createdAt,
     String? syncStatus,
     String? errorMessage,
+    String? processDate,
   }) {
     return PendingAcceptOrder(
       id: id ?? this.id,
@@ -63,6 +72,7 @@ class PendingAcceptOrder extends BaseModel {
       createdAt: createdAt ?? this.createdAt,
       syncStatus: syncStatus ?? this.syncStatus,
       errorMessage: errorMessage ?? this.errorMessage,
+      processDate: processDate ?? this.processDate,
     );
   }
 
@@ -71,6 +81,6 @@ class PendingAcceptOrder extends BaseModel {
 
   @override
   String toString() {
-    return 'PendingAcceptOrder(id: $id, orderOid: $orderOid, syncStatus: $syncStatus)';
+    return 'PendingAcceptOrder(id: $id, orderOid: $orderOid, syncStatus: $syncStatus, processDate: $processDate)';
   }
 }

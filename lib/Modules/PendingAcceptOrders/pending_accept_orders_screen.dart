@@ -238,7 +238,9 @@ class PendingAcceptOrdersScreen extends StatelessWidget {
                     return Column(
                       children: [
                         _buildDetailRow('الموقع', fullOrder.location ?? '-'),
-                        _buildDetailRow('رقم السيارة', fullOrder.carNum ?? '-'),
+                        if (fullOrder.carNum != null &&
+                            fullOrder.carNum!.isNotEmpty)
+                          _buildDetailRow('رقم السيارة', fullOrder.carNum!),
                         _buildDetailRow(
                           'السائق',
                           controller.getDriverName(fullOrder.driverOid),

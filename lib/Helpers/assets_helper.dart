@@ -15,7 +15,8 @@ class AssetsHelper {
   static const String ic_pin_svg = "${image_path}ic_pin.svg";
   static const String ic_circle = "${image_path}ic_circle.svg";
   static const String ic_my_location = "${image_path}ic_my_location.svg";
-  static const String logo = "${image_path}ic_logo_splash.png";
+  static const String logo = "${image_path}rubble_app_icon.png";
+  // static const String logo = "${image_path}ic_logo_splash.png";
 
   static const String ic_tab_complaint_off_svg =
       "${image_path}ic_tab_complaint_off.svg";

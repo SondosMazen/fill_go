@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:searchfield/searchfield.dart';
+import 'package:fill_go/Modules/Main/Home/matching_offline_requests_screen.dart';
+import 'package:fill_go/Modules/Main/Home/home_controller.dart';
 
 class AddRequest extends StatefulWidget {
   String? location;
@@ -17,6 +19,7 @@ class AddRequest extends StatefulWidget {
   String? driver;
   String? processNotes;
   String? orderId;
+  String? orderNum;
   bool isDetails;
   bool isAccepted;
   String userType;
@@ -34,6 +37,7 @@ class AddRequest extends StatefulWidget {
     this.driver,
     this.processNotes,
     this.orderId,
+    this.orderNum,
   });
 
   @override
@@ -153,6 +157,20 @@ class _AddRequestState extends State<AddRequest> {
                               return null;
                             },
                           ),
+                          if (!widget.isDetails ||
+                              (widget.orderNum != null &&
+                                  widget.orderNum!.isNotEmpty)) ...[
+                            const SizedBox(height: 20),
+                            _buildLabel('رقم الطلب'),
+                            MyTextField(
+                              isEnabled: !widget.isDetails,
+                              filled: true,
+                              fillColor: const Color(0xFFFAFAFA),
+                              hint: widget.orderNum ?? 'أدخل رقم الطلب',
+                              myController: controller.orderNumController,
+                              iconData: Icons.numbers,
+                            ),
+                          ],
                           const SizedBox(height: 20),
                           _buildLabel('أسم السائق'),
                           SearchField(
@@ -161,7 +179,7 @@ class _AddRequestState extends State<AddRequest> {
                             textInputAction: TextInputAction.next,
                             autoCorrect: true,
                             focusNode: _driverFocusNode,
-                            readOnly: true,
+                            readOnly: false,
                             searchInputDecoration: SearchInputDecoration(
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
@@ -210,7 +228,8 @@ class _AddRequestState extends State<AddRequest> {
                               ),
                             ),
                             itemHeight: 50,
-                            maxSuggestionsInViewPort: 6,
+                            maxSuggestionsInViewPort: 5,
+                            offset: const Offset(0, 60),
                             suggestionsDecoration: SuggestionDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(10),
@@ -235,46 +254,60 @@ class _AddRequestState extends State<AddRequest> {
                                   .isEmpty) {
                                 return 'يجب الاختيار من القائمة';
                               }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 24),
-                          const Divider(height: 1),
-                          const SizedBox(height: 24),
-                          _buildSectionTitle('بيانات المركبة'),
-                          const SizedBox(height: 16),
-                          _buildLabel('نوع السيارة'),
-                          MyTextField(
-                            isEnabled: !widget.isDetails,
-                            filled: true,
-                            fillColor: const Color(0xFFFAFAFA),
-                            hint: widget.carType ?? 'أدخل نوع السيارة',
-                            myController: controller.carTypeController,
-                            iconData: Icons.local_shipping_outlined,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'يرجى ادخال نوع السيارة';
+                              // التحقق من أن القيمة موجودة في القائمة
+                              final isExist =
+                                  controller.tDrivers?.any(
+                                    (element) =>
+                                        element.name ==
+                                        controller.driversController.text,
+                                  ) ??
+                                  false;
+                              if (!isExist) {
+                                return 'يجب اختيار سائق من القائمة';
                               }
                               return null;
                             },
                           ),
-                          const SizedBox(height: 20),
-                          _buildLabel('رقم السيارة'),
-                          MyTextField(
-                            isEnabled: !widget.isDetails,
-                            textInputType: TextInputType.number,
-                            filled: true,
-                            fillColor: const Color(0xFFFAFAFA),
-                            hint: widget.carNum ?? 'اختر رقم السيارة',
-                            myController: controller.carNumberController,
-                            iconData: Icons.numbers_rounded,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'يرجى ادخال رقم السيارة';
-                              }
-                              return null;
-                            },
-                          ),
+                          if (!widget.isDetails ||
+                              (widget.carType != null &&
+                                  widget.carType!.isNotEmpty) ||
+                              (widget.carNum != null &&
+                                  widget.carNum!.isNotEmpty)) ...[
+                            const SizedBox(height: 24),
+                            const Divider(height: 1),
+                            const SizedBox(height: 24),
+                            _buildSectionTitle('بيانات المركبة'),
+                          ],
+                          if (!widget.isDetails ||
+                              (widget.carType != null &&
+                                  widget.carType!.isNotEmpty)) ...[
+                            const SizedBox(height: 16),
+                            _buildLabel('نوع السيارة'),
+                            MyTextField(
+                              isEnabled: !widget.isDetails,
+                              filled: true,
+                              fillColor: const Color(0xFFFAFAFA),
+                              hint: widget.carType ?? 'أدخل نوع السيارة',
+                              myController: controller.carTypeController,
+                              // myController: controller.carTypeController,
+                              iconData: Icons.local_shipping_outlined,
+                            ),
+                          ],
+                          if (!widget.isDetails ||
+                              (widget.carNum != null &&
+                                  widget.carNum!.isNotEmpty)) ...[
+                            const SizedBox(height: 20),
+                            _buildLabel('رقم السيارة'),
+                            MyTextField(
+                              isEnabled: !widget.isDetails,
+                              textInputType: TextInputType.number,
+                              filled: true,
+                              fillColor: const Color(0xFFFAFAFA),
+                              hint: widget.carNum ?? 'اختر رقم السيارة',
+                              myController: controller.carNumberController,
+                              iconData: Icons.numbers_rounded,
+                            ),
+                          ],
                           const SizedBox(height: 24),
                           const Divider(height: 1),
                           const SizedBox(height: 24),
@@ -287,7 +320,7 @@ class _AddRequestState extends State<AddRequest> {
                             textInputAction: TextInputAction.next,
                             autoCorrect: true,
                             focusNode: _unloadingLocationFocusNode,
-                            readOnly: true,
+                            readOnly: false,
                             searchInputDecoration: SearchInputDecoration(
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
@@ -334,7 +367,8 @@ class _AddRequestState extends State<AddRequest> {
                               ),
                             ),
                             itemHeight: 50,
-                            maxSuggestionsInViewPort: 6,
+                            maxSuggestionsInViewPort: 5,
+                            offset: const Offset(0, 60),
                             suggestionsDecoration: SuggestionDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(10),
@@ -358,6 +392,19 @@ class _AddRequestState extends State<AddRequest> {
                                   .trim()
                                   .isEmpty) {
                                 return 'يجب الاختيار من القائمة';
+                              }
+                              // التحقق من أن القيمة موجودة في القائمة
+                              final isExist =
+                                  controller.tSites?.any(
+                                    (element) =>
+                                        element.name ==
+                                        controller
+                                            .unloadingLocationController
+                                            .text,
+                                  ) ??
+                                  false;
+                              if (!isExist) {
+                                return 'يجب اختيار موقع من القائمة';
                               }
                               return null;
                             },
@@ -437,7 +484,62 @@ class _AddRequestState extends State<AddRequest> {
                                           "inspector",
                                         ))) {
                                   if (widget.orderId != null) {
-                                    controller.acceptOrder(widget.orderId!);
+                                    // التحقق من وجود طلبات اوفلاين مطابقة
+                                    bool matchFound = false;
+
+                                    if (Get.isRegistered<HomeController>()) {
+                                      final homeController =
+                                          Get.find<HomeController>();
+                                      String currentDriverName = '';
+
+                                      // البحث عن اسم السائق الحالي
+                                      if (controller.tDrivers != null) {
+                                        for (var d in controller.tDrivers!) {
+                                          if (d.oid.toString() ==
+                                              widget.driver) {
+                                            currentDriverName = d.name ?? '';
+                                            break;
+                                          }
+                                        }
+                                      }
+
+                                      if (currentDriverName.isNotEmpty) {
+                                        final matches = homeController
+                                            .getOfflineMatches(
+                                              currentDriverName,
+                                            );
+                                        if (matches.isNotEmpty) {
+                                          matchFound = true;
+                                          Get.to(
+                                            () => MatchingOfflineRequestsScreen(
+                                              matchingRequests: matches,
+                                              driverName: currentDriverName,
+                                              onlineOrderNumber:
+                                                  widget.orderNum,
+                                              onConfirm:
+                                                  (selectedOfflineRequestId) {
+                                                    Future.delayed(
+                                                      const Duration(
+                                                        milliseconds: 300,
+                                                      ),
+                                                      () {
+                                                        controller.acceptOrder(
+                                                          widget.orderId!,
+                                                          offlineRequestId:
+                                                              selectedOfflineRequestId,
+                                                        );
+                                                      },
+                                                    );
+                                                  },
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    }
+
+                                    if (!matchFound) {
+                                      controller.acceptOrder(widget.orderId!);
+                                    }
                                   }
                                 } else {
                                   if (controller.formKey.currentState!

@@ -72,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Hero(
                     tag: 'logo',
                     child: Container(
-                      padding: EdgeInsets.all(20.w),
+                      // padding: EdgeInsets.all(20.w),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
@@ -86,8 +86,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       child: Image.asset(
                         AssetsHelper.logo,
-                        width: 100.w,
-                        height: 100.h,
+                        width: 200.w,
+                        height: 200.h,
                       ),
                     ),
                   ),
@@ -148,27 +148,28 @@ class _LoginScreenState extends State<LoginScreen> {
                             fillColor: const Color(0xFFFAFAFA),
                           ),
                           SizedBox(height: 16.h),
-                          Align(
-                            alignment: AlignmentDirectional.centerEnd,
-                            child: TextButton(
-                              onPressed: () {
-                                // Forgot password logic
-                              },
-                              style: TextButton.styleFrom(
-                                foregroundColor: AssetsColors.primaryOrange,
-                                padding: EdgeInsets.zero,
-                                minimumSize: const Size(0, 30),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: Text(
-                                'نسيت كلمة المرور؟',
-                                style: TextStyle(
-                                  fontSize: 13.sp,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ),
+
+                          // Align(
+                          //   alignment: AlignmentDirectional.centerEnd,
+                          //   child: TextButton(
+                          //     onPressed: () {
+                          //       // Forgot password logic
+                          //     },
+                          //     style: TextButton.styleFrom(
+                          //       foregroundColor: AssetsColors.primaryOrange,
+                          //       padding: EdgeInsets.zero,
+                          //       minimumSize: const Size(0, 30),
+                          //       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          //     ),
+                          //     child: Text(
+                          //       'نسيت كلمة المرور؟',
+                          //       style: TextStyle(
+                          //         fontSize: 13.sp,
+                          //         fontWeight: FontWeight.w700,
+                          //       ),
+                          //     ),
+                          //   ),
+                          // ),
                           SizedBox(height: 28.h),
                           MyCustomButton(
                             text: 'دخول',

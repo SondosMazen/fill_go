@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:fill_go/Helpers/assets_color.dart';
+import 'package:fill_go/Helpers/font_helper.dart';
 import 'package:fill_go/Model/PendingOrder.dart';
 import 'package:fill_go/Model/TDriver.dart';
 import 'package:fill_go/Model/TSite.dart';
@@ -132,15 +135,75 @@ class PendingOrdersController extends GetxController {
       return;
     }
 
-    // استخدام المزامنة الجماعية الشاملة بدلاً من المزامنة الفردية
-    await _syncService!.syncPendingOrders();
+    // إظهار مؤشر التحميل
+    Get.dialog(
+      const Center(
+        child: CircularProgressIndicator(color: AssetsColors.primaryOrange),
+      ),
+      barrierDismissible: false,
+    );
+
+    // محاولة المزامنة الفردية
+    final success = await _syncService!.syncSingleOrder(orderId);
+
+    // إغلاق مؤشر التحميل
+    if (Get.isDialogOpen ?? false) Get.back();
+
     await loadPendingOrders();
 
-    Get.snackbar(
-      'تمت المحاولة',
-      'تمت محاولة رفع الطلبات المعلقة',
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    if (success) {
+      Get.snackbar(
+        'تمت العملية',
+        'تم ترحيل الطلب بنجاح',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } else {
+      // جلب رسالة الخطأ ومحاولة عرضها بشكل أوضح
+      final order = await _dbHelper.read(orderId);
+      String errorMessage = order?.errorMessage ?? 'حدث خطأ غير معروف';
+
+      // تنظيف رسالة الخطأ إذا كانت طويلة أو معقدة
+      if (errorMessage.contains('SocketException') ||
+          errorMessage.contains('Connection refused')) {
+        errorMessage = 'لا يوجد اتصال بالسيرفر. يرجى التحقق من الإنترنت.';
+      } else if (errorMessage.contains('Timeout')) {
+        errorMessage = 'انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.';
+      }
+
+      Get.defaultDialog(
+        title: 'فشل الترحيل',
+        titleStyle: FontsAppHelper().cairoBoldFont(size: 16, color: Colors.red),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            errorMessage,
+            textAlign: TextAlign.center,
+            style: FontsAppHelper().cairoMediumFont(size: 14),
+          ),
+        ),
+        confirm: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () => Get.back(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AssetsColors.primaryOrange,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(
+              'حسناً',
+              style: FontsAppHelper().cairoBoldFont(
+                size: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   /// حذف طلب معلق

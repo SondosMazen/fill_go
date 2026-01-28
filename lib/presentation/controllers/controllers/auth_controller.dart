@@ -21,7 +21,6 @@ class AuthController extends GetxController {
   bool get isInspector => currentUser?.userType == UserType.inspector;
   bool get isContractor => currentUser?.userType == UserType.contractor;
 
-
   @override
   void onInit() {
     super.onInit();
@@ -52,7 +51,10 @@ class AuthController extends GetxController {
   void setCurrentUser(TUser user) {
     _currentUser.value = user;
     _isLoggedIn.value = true;
-    Application.sharedPreferences.setString(Constants.USER_TYPE, user.userType?.toString() ?? '1');
+    Application.sharedPreferences.setString(
+      Constants.USER_TYPE,
+      user.userType.toString(),
+    );
 
     update(); // إعلام GetX بالتغيير
   }
@@ -205,14 +207,14 @@ class AuthController extends GetxController {
       'inspect_complaints',
       'add_items',
       'take_photos',
-      'update_status'
+      'update_status',
     ];
 
     final permissionsContractor = [
       'view_assigned_complaints',
       'update_work_status',
       'take_photos',
-      'complete_work'
+      'complete_work',
     ];
 
     switch (currentUser!.userType) {
@@ -221,10 +223,8 @@ class AuthController extends GetxController {
 
       case UserType.contractor:
         return permissionsContractor.contains(action);
-
     }
   }
-
 
   /// الحصول على الصفحة الرئيسية حسب نوع المستخدم
   String getHomeRoute() {
@@ -239,7 +239,6 @@ class AuthController extends GetxController {
         return '/inspector-dashboard';
     }
   }
-
 
   /// مسح حالة المصادقة
   Future<void> _clearAuthState() async {

@@ -26,7 +26,8 @@ class RequestCard extends StatelessWidget {
     final String loadLocation = order.location ?? 'غير محدد';
     final String carInfo = '${order.carType ?? ''} - ${order.carNum ?? ''}';
     final String siteInfo = '${order.site?.name ?? 'غير محدد'}';
-    final String driverName = order.entryUser?.name ?? '';
+    // final String driverName = order.entryUser?.name ?? '';
+    final String driverName = order.driver?.name ?? '';
 
     return InkWell(
       onTap: () async {
@@ -41,9 +42,10 @@ class RequestCard extends StatelessWidget {
             location: order.location,
             site:
                 '${order.site?.name}', // Display name in details dropdown hint
-            driver: order.entryUserOid, // ID for driver
+            driver: order.driverOid, // ID for driver
             processNotes: order.processNotes,
             orderId: '${order.oid}',
+            orderNum: order.orderNum,
             isAccepted:
                 isAccepted || controller.isOrderAcceptedLocally('${order.oid}'),
           ),
@@ -80,42 +82,79 @@ class RequestCard extends StatelessWidget {
                   top: Radius.circular(15),
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Status Badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isAccepted ? Colors.green : Colors.redAccent,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      isAccepted ? 'تم القبول' : 'متاح للطلب',
-                      style: FontsAppHelper().cairoBoldFont(
-                        size: 11,
-                        color: Colors.white,
+                  if (order.orderNum != null &&
+                      order.orderNum!.isNotEmpty &&
+                      !isAccepted)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'طلب رقم ',
+                                  style: FontsAppHelper().cairoBoldFont(
+                                    size: 13,
+                                    color: AssetsColors.color_black_392C23,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: order.orderNum ?? '',
+                                  style: FontsAppHelper().cairoBoldFont(
+                                    size: 15,
+                                    color:
+                                        AssetsColors.darkBerry, // لون توتي غامق
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  // Date
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(
-                        Icons.calendar_today_rounded,
-                        size: 14,
-                        color: Colors.grey.shade600,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$formattedDate - $formattedTime',
-                        style: FontsAppHelper().cairoMediumFont(
-                          size: 12,
-                          color: Colors.grey.shade700,
+                      // Status Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
                         ),
+                        decoration: BoxDecoration(
+                          color: isAccepted ? Colors.green : Colors.redAccent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          isAccepted ? 'تم القبول' : 'متاح للطلب',
+                          style: FontsAppHelper().cairoBoldFont(
+                            size: 11,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      // Date
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today_rounded,
+                            size: 14,
+                            color: Colors.grey.shade600,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$formattedDate - $formattedTime',
+                            style: FontsAppHelper().cairoMediumFont(
+                              size: 12,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -152,14 +191,16 @@ class RequestCard extends StatelessWidget {
                   // Row 2: Car | Driver
                   Row(
                     children: [
-                      Expanded(
-                        child: _buildDetailRow(
-                          Icons.local_shipping_outlined,
-                          'السيارة:',
-                          carInfo,
+                      if (order.carNum != null && order.carNum!.isNotEmpty) ...[
+                        Expanded(
+                          child: _buildDetailRow(
+                            Icons.local_shipping_outlined,
+                            'السيارة:',
+                            carInfo,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
+                        const SizedBox(width: 8),
+                      ],
                       Expanded(
                         child: _buildDetailRow(
                           Icons.person_outline,
@@ -192,7 +233,7 @@ class RequestCard extends StatelessWidget {
                     return ElevatedButton(
                       onPressed: isLocallyAccepted
                           ? null
-                          : () => controller.acceptOrder('${order.oid}'),
+                          : () => controller.checkAndAcceptOrder(order),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: isLocallyAccepted
                             ? Colors.grey.shade400

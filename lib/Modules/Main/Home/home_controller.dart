@@ -3,9 +3,13 @@ import 'dart:developer';
 import 'package:fill_go/Api/Repo/requests_repo.dart';
 import 'package:fill_go/App/Constant.dart';
 import 'package:fill_go/App/app.dart';
+import 'package:fill_go/Helpers/assets_color.dart';
+import 'package:fill_go/Helpers/font_helper.dart';
 import 'package:fill_go/Helpers/snackbar_helper.dart';
 import 'package:fill_go/Model/TOrder.dart';
 import 'package:fill_go/Model/PendingAcceptOrder.dart';
+import 'package:fill_go/Model/PendingOrder.dart';
+import 'package:fill_go/Model/TSite.dart';
 import 'package:fill_go/core/database/database_helper.dart';
 import 'package:fill_go/core/services/connectivity_service.dart';
 import 'package:fill_go/core/services/sync_service.dart';
@@ -15,6 +19,7 @@ import 'package:get/get.dart';
 import 'package:fill_go/Modules/Base/BaseGetxController.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../Api/BaseResponse.dart';
+import 'package:fill_go/Modules/Main/Home/matching_offline_requests_screen.dart';
 import '../../../presentation/controllers/controllers/auth_controller.dart';
 
 class HomeController extends BaseGetxController {
@@ -24,6 +29,12 @@ class HomeController extends BaseGetxController {
   RxList<TOrder> filteredOrders = RxList<TOrder>.empty();
   RxList<TOrder> filteredPendingOrders = RxList<TOrder>.empty();
   RxList<TOrder> filteredAcceptedOrders = RxList<TOrder>.empty();
+  RxString loadingMessage = ''.obs;
+
+  // قائمة طلبات الاوفلاين (PendingOrder)
+  RxList<PendingOrder> offlineRequests = <PendingOrder>[].obs;
+  RxList<PendingOrder> filteredOfflineRequests = <PendingOrder>[].obs;
+  Map<String, String> sitesMap = {};
 
   List<TOrder> pendingOrders = [];
   List<TOrder> acceptedOrders = [];
@@ -59,6 +70,8 @@ class HomeController extends BaseGetxController {
     }
 
     loadLocalAcceptedOrderIds();
+    loadOfflineRequests(); // تحميل طلبات الاوفلاين
+    loadSitesMap();
 
     // الاستماع للتغييرات في SyncService
     try {
@@ -68,9 +81,12 @@ class HomeController extends BaseGetxController {
         ever(syncService.isSyncing, (syncing) {
           if (!syncing) {
             loadLocalAcceptedOrderIds();
+            loadOfflineRequests(); // تحديث القائمة بعد انتهاء المزامنة
             getOrders();
           }
         });
+        // تحديث القائمة عند تغير عداد الطلبات المعلقة
+        ever(syncService.pendingCount, (_) => loadOfflineRequests());
       }
     } catch (e) {
       log('SyncService listeners error: $e');
@@ -86,8 +102,31 @@ class HomeController extends BaseGetxController {
           .where((o) => o.orderOid != null)
           .map((o) => o.orderOid!)
           .toList();
+      calculateDailyStats();
     } catch (e) {
       log('Error loading local accepted order IDs: $e');
+    }
+  }
+
+  /// تحميل الطلبات المعلقة (الاوفلاين)
+  Future<void> loadOfflineRequests() async {
+    try {
+      final dbHelper = DatabaseHelper.instance;
+      final requests = await dbHelper.readAll();
+
+      // Sort: Newest first
+      requests.sort((a, b) {
+        if (a.createdAt == null || b.createdAt == null) return 0;
+        return DateTime.parse(
+          b.createdAt!,
+        ).compareTo(DateTime.parse(a.createdAt!));
+      });
+
+      offlineRequests.value = requests;
+      filteredOfflineRequests.value = requests; // Initialize filtered list
+      calculateDailyStats();
+    } catch (e) {
+      log('Error loading offline requests: $e');
     }
   }
 
@@ -97,8 +136,90 @@ class HomeController extends BaseGetxController {
     return localAcceptedOrderIds.contains(oid.toString());
   }
 
-  Future<List<TOrder>?> getOrders() async {
+  Future<void> loadSitesMap() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final sitesJson = prefs.getString('cached_sites');
+      if (sitesJson != null) {
+        final List<dynamic> sitesList = jsonDecode(sitesJson);
+        final sites = sitesList.map((json) => TSite.fromJson(json)).toList();
+        for (var site in sites) {
+          if (site.oid != null && site.name != null) {
+            sitesMap[site.oid.toString()] = site.name!;
+          }
+        }
+      }
+    } catch (e) {
+      log('Error loading sites map: $e');
+    }
+  }
+
+  String getSiteName(String? oid) {
+    if (oid == null) return '-';
+    return sitesMap[oid.toString()] ?? '-';
+  }
+
+  RxInt todayAddedCount = 0.obs;
+  RxInt todayAcceptedCount = 0.obs;
+
+  void calculateDailyStats() async {
+    final now = DateTime.now();
+    final todayStr =
+        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
+    int added = 0;
+    int accepted = 0;
+
+    // 1. Server Orders
+    if (tOrder != null) {
+      for (var order in tOrder!) {
+        // Pending Added Today
+        if (order.processUser == null &&
+            order.entryDate != null &&
+            order.entryDate!.startsWith(todayStr)) {
+          added++;
+        }
+        // Accepted Today
+        if (order.processUser != null &&
+            order.processDate != null &&
+            order.processDate!.startsWith(todayStr)) {
+          accepted++;
+        }
+      }
+    }
+
+    // 2. Local Offline Requests (Added Today)
+    for (var req in offlineRequests) {
+      // created_at usually is ISO8601 string or similar. T checks startWidth.
+      // ISO: 2026-01-27T11:20:50...
+      // todayStr: 2026-01-27
+      if (req.createdAt != null && req.createdAt!.startsWith(todayStr)) {
+        added++;
+      }
+    }
+
+    // 3. Local Accepted Orders (Accepted Today)
+    int localAcceptedToday = 0;
+    try {
+      final dbHelper = DatabaseHelper.instance;
+      final localAccepted = await dbHelper.readAllAcceptOrders();
+      for (var order in localAccepted) {
+        if (order.processDate != null &&
+            order.processDate!.startsWith(todayStr)) {
+          localAcceptedToday++;
+        }
+      }
+    } catch (e) {
+      log('Error calculating local stats: $e');
+    }
+
+    todayAddedCount.value = added;
+    todayAcceptedCount.value = accepted + localAcceptedToday;
+  }
+
+  Future<List<TOrder>?> getOrders({String? message}) async {
+    try {
+      loadingMessage.value = message ?? '';
       setLoading(true);
 
       // تحميل الطلبات المحفوظة أولاً (للعرض الفوري)
@@ -122,9 +243,45 @@ class HomeController extends BaseGetxController {
           ).compareTo(DateTime.parse(a.entryDate ?? ''));
         });
 
+        calculateDailyStats();
+
         // Split orders
-        pendingOrders = tOrder!.where((o) => o.processUser == null).toList();
-        acceptedOrders = tOrder!.where((o) => o.processUser != null).toList();
+        final now = DateTime.now();
+        final todayStr =
+            "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
+        pendingOrders = tOrder!
+            .where(
+              (o) =>
+                  o.processUser == null &&
+                  (o.entryDate != null && o.entryDate!.startsWith(todayStr)),
+            )
+            .toList();
+        acceptedOrders = tOrder!
+            .where(
+              (o) =>
+                  o.processUser != null &&
+                  (o.processDate != null &&
+                      o.processDate!.startsWith(todayStr)),
+            )
+            .toList();
+
+        // Sort Pending (Added) by entryDate descending
+        pendingOrders.sort((a, b) {
+          return DateTime.parse(
+            b.entryDate ?? '',
+          ).compareTo(DateTime.parse(a.entryDate ?? ''));
+        });
+
+        // Sort Accepted by processDate descending
+        acceptedOrders.sort((a, b) {
+          final aDate =
+              a.processDate ??
+              a.entryDate ??
+              ''; // Fallback to entryDate if processDate missing
+          final bDate = b.processDate ?? b.entryDate ?? '';
+          return DateTime.parse(bDate).compareTo(DateTime.parse(aDate));
+        });
 
         filteredOrders.value = tOrder ?? [];
         filteredPendingOrders.value = pendingOrders;
@@ -226,8 +383,25 @@ class HomeController extends BaseGetxController {
         tOrder = ordersList.map((json) => TOrder.fromJson(json)).toList();
 
         // Split orders
-        pendingOrders = tOrder!.where((o) => o.processUser == null).toList();
-        acceptedOrders = tOrder!.where((o) => o.processUser != null).toList();
+        final now = DateTime.now();
+        final todayStr =
+            "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
+        pendingOrders = tOrder!
+            .where(
+              (o) =>
+                  o.processUser == null &&
+                  (o.entryDate != null && o.entryDate!.startsWith(todayStr)),
+            )
+            .toList();
+        acceptedOrders = tOrder!
+            .where(
+              (o) =>
+                  o.processUser != null &&
+                  (o.processDate != null &&
+                      o.processDate!.startsWith(todayStr)),
+            )
+            .toList();
 
         filteredOrders.value = tOrder ?? [];
         filteredPendingOrders.value = pendingOrders;
@@ -257,6 +431,7 @@ class HomeController extends BaseGetxController {
       filteredOrders.value = tOrder ?? [];
       filteredPendingOrders.value = pendingOrders;
       filteredAcceptedOrders.value = acceptedOrders;
+      filteredOfflineRequests.value = offlineRequests;
       update();
     } else {
       bool Function(TOrder) filterFn = (order) {
@@ -288,38 +463,130 @@ class HomeController extends BaseGetxController {
       filteredOrders.value = tOrder!.where(filterFn).toList();
       filteredPendingOrders.value = pendingOrders.where(filterFn).toList();
       filteredAcceptedOrders.value = acceptedOrders.where(filterFn).toList();
+
+      // Search Offline Requests
+      filteredOfflineRequests.value = offlineRequests.where((req) {
+        final refMatch = req.referenceNumber?.contains(q) ?? false;
+        final driverMatch = req.driverName?.contains(q) ?? false;
+        return refMatch || driverMatch;
+      }).toList();
     }
     update();
   }
 
-  void acceptOrder(String orderNumber, {String? notes}) async {
+  void checkAndAcceptOrder(TOrder order) {
+    // التحقق من وجود طلبات اوفلاين مطابقة لاسم السائق
+    final driverName = order.driver?.name;
+    if (driverName != null && driverName.isNotEmpty) {
+      final matches = offlineRequests
+          .where((req) => req.driverName == driverName)
+          .toList();
+
+      if (matches.isNotEmpty) {
+        Get.to(
+          () => MatchingOfflineRequestsScreen(
+            matchingRequests: matches,
+            driverName: driverName,
+            onlineOrderNumber: order.orderNum,
+            onConfirm: (selectedOfflineRequestId) {
+              // تأخير بسيط لضمان إغلاق الشاشة السابقة قبل البدء
+              Future.delayed(const Duration(milliseconds: 300), () {
+                acceptOrder(
+                  order.oid.toString(),
+                  offlineRequestId: selectedOfflineRequestId,
+                );
+              });
+            },
+          ),
+        );
+        return;
+      }
+    }
+
+    // المتابعة بشكل طبيعي
+    acceptOrder(order.oid.toString());
+  }
+
+  List<PendingOrder> getOfflineMatches(String driverName) {
+    return offlineRequests
+        .where((req) => req.driverName == driverName)
+        .toList();
+  }
+
+  void acceptOrder(
+    String orderNumber, {
+    String? notes,
+    int? offlineRequestId,
+  }) async {
     // التحقق من الاتصال بالإنترنت
     final connectivityService = Get.find<ConnectivityService>();
+    final now = DateTime.now();
+    // 2026-01-25 09:33:00
+    final processDate =
+        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}";
 
     Map<String, dynamic> body = {
       'notes': notes ?? 'تم قبول الطلب',
       'order_oid': orderNumber,
+      'process_date': processDate,
     };
 
     // إذا كان هناك اتصال، أرسل للسيرفر مباشرة
     if (connectivityService.isOnline.value) {
-      setLoading(true);
+      // إظهار اللودينج مع الرسالة
+      Get.dialog(
+        const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: AssetsColors.primaryOrange),
+              SizedBox(height: 16),
+              // Material(
+              //   color: Colors.transparent,
+              //   child: Text(
+              //     "جاري قبول الطلب...",
+              //     style: TextStyle(color: Colors.white, fontSize: 16),
+              //   ),
+              // ),
+            ],
+          ),
+        ),
+        barrierDismissible: false,
+      );
+
       BaseResponse? response = await RequestsRepo.instance.postProcessOrder(
         body: body,
       );
-      setLoading(false);
+
+      // إغلاق اللودينج
+      if (Get.isDialogOpen ?? false) Get.back();
 
       if (checkResponse(response)) {
         return null;
       }
 
       if (response.data != null) {
+        // حذف طلب الاوفلاين إذا تم تحديده
+        if (offlineRequestId != null) {
+          try {
+            final dbHelper = DatabaseHelper.instance;
+            await dbHelper.delete(offlineRequestId);
+            final syncService = Get.find<SyncService>();
+            await syncService.updatePendingCount();
+            log('تم حذف طلب الاوفلاين #$offlineRequestId بعد القبول');
+          } catch (e) {
+            log('خطأ في حذف طلب الاوفلاين: $e');
+          }
+        }
+
         acceptOrderMsg = response.message!;
         SnackBarHelper.show(
           msg: acceptOrderMsg!,
           backgroundColor: Colors.green,
         );
-        getOrders(); // Refresh lists after accepting
+        getOrders(
+          message: 'جاري قبول الطلب...',
+        ); // Refresh lists after accepting
       }
     }
     // إذا لم يكن هناك اتصال، احفظ محلياً
@@ -331,9 +598,16 @@ class HomeController extends BaseGetxController {
           notes: notes ?? 'تم قبول الطلب',
           createdAt: DateTime.now().toIso8601String(),
           syncStatus: 'pending',
+          processDate: processDate,
         );
 
         await dbHelper.createAcceptOrder(pendingAcceptOrder);
+
+        // حذف طلب الاوفلاين إذا تم تحديده (حتى لا يظهر مرة أخرى محلياً)
+        if (offlineRequestId != null) {
+          await dbHelper.delete(offlineRequestId);
+          log('تم حذف طلب الاوفلاين #$offlineRequestId بعد القبول المحلى');
+        }
 
         // تحديث عداد الطلبات المعلقة
         final syncService = Get.find<SyncService>();
@@ -357,6 +631,136 @@ class HomeController extends BaseGetxController {
           colorText: Colors.white,
         );
       }
+    }
+  }
+
+  /// حذف طلب اوفلاين
+  Future<void> deleteOfflineRequest(int id) async {
+    try {
+      final dbHelper = DatabaseHelper.instance;
+      await dbHelper.delete(id);
+
+      // تحديث القائمة
+      await loadOfflineRequests();
+
+      // تحديث عداد الطلبات المعلقة في SyncService
+      if (Get.isRegistered<SyncService>()) {
+        await Get.find<SyncService>().updatePendingCount();
+      }
+
+      Get.snackbar(
+        'تم الحذف',
+        'تم حذف الطلب بنجاح',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+    } catch (e) {
+      log('Error deleting offline request: $e');
+      Get.snackbar(
+        'خطأ',
+        'فشل حذف الطلب',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  /// إعادة محاولة مزامنة طلب اوفلاين
+  Future<void> retrySyncRequest(PendingOrder order) async {
+    if (order.id == null) return;
+
+    final connectivityService = Get.find<ConnectivityService>();
+    if (!connectivityService.isOnline.value) {
+      Get.snackbar(
+        'لا يوجد اتصال',
+        'يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    try {
+      // إظهار مؤشر تحميل
+      Get.dialog(
+        const Center(
+          child: CircularProgressIndicator(color: AssetsColors.primaryOrange),
+        ),
+        barrierDismissible: false,
+      );
+
+      final syncService = Get.find<SyncService>();
+      final success = await syncService.syncSingleOrder(order.id!);
+
+      // إغلاق مؤشر التحميل
+      Get.back();
+
+      if (success) {
+        Get.snackbar(
+          'تمت العملية',
+          'تم ترحيل الطلب بنجاح',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        // القائمة ستتحدث تلقائياً بسبب المستمع في onInit
+      } else {
+        // فشل الترحيل - قراءة رسالة الخطأ
+        final dbHelper = DatabaseHelper.instance;
+        final updatedOrder = await dbHelper.read(order.id!);
+        final errorMessage = updatedOrder?.errorMessage ?? 'حدث خطأ غير معروف';
+
+        Get.defaultDialog(
+          title: 'فشل الترحيل',
+          titleStyle: FontsAppHelper().cairoBoldFont(
+            size: 16,
+            color: Colors.red,
+          ),
+          content: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              errorMessage,
+              textAlign: TextAlign.center,
+              style: FontsAppHelper().cairoMediumFont(size: 14),
+            ),
+          ),
+          confirm: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Get.back(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AssetsColors.primaryOrange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'حسناً',
+                style: FontsAppHelper().cairoBoldFont(
+                  size: 14,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      // إغلاق مؤشر التحميل في حال حدوث استثناء
+      if (Get.isDialogOpen ?? false) Get.back();
+
+      log('Error retrying sync: $e');
+      Get.snackbar(
+        'خطأ',
+        'حدث خطأ أثناء المحاولة: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
   }
 }

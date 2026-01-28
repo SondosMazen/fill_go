@@ -21,6 +21,7 @@ class AddRequestController extends BaseGetxController {
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   TextEditingController titleController = TextEditingController();
+  TextEditingController orderNumController = TextEditingController();
   TextEditingController loadingLocationController = TextEditingController();
   TextEditingController carTypeController = TextEditingController();
   TextEditingController carNumberController = TextEditingController();
@@ -110,7 +111,10 @@ class AddRequestController extends BaseGetxController {
       'rubble_site_oid': selectedUnloadLocationValue,
       'notes': notesController.text,
       'driver_oid': selectedDriverValue,
+      'order_num': orderNumController.text,
     };
+
+    // Check for duplicate order number is removed as per request.
 
     // إذا كان هناك اتصال، أرسل للسيرفر مباشرة
     if (connectivityService.isOnline.value) {
@@ -122,6 +126,13 @@ class AddRequestController extends BaseGetxController {
       if (checkResponse(response, showPopup: true)) {
         return false;
       }
+
+      // إذا عاد السيرفر بخطأ يتعلق بالتكرار (يمكن التحقق من نص الرسالة إذا لزم الأمر)
+      // ولكن checkResponse قد يعالج ذلك.
+      // سنفترض أن السيرفر يرسل رسالة واضحة في حالة التكرار.
+
+      // تحويل map إلى PendingOrder لإضافته مؤقتاً أو فقط للمزامنة (اختياري)
+      // في هذه الحالة نكتفي بالنجاح
 
       // تحديث رقم السيارة بعد النجاح
       await _incrementCarNum();
@@ -140,6 +151,7 @@ class AddRequestController extends BaseGetxController {
           rubbleSiteOid: map['rubble_site_oid'],
           notes: map['notes'],
           driverOid: map['driver_oid'],
+          referenceNumber: map['order_num'],
           createdAt: DateTime.now().toIso8601String(),
           syncStatus: 'pending',
         );
@@ -201,12 +213,11 @@ class AddRequestController extends BaseGetxController {
     }
   }
 
-  Future<void> _incrementCarNum() async {
-  }
+  Future<void> _incrementCarNum() async {}
 
   bool isAccepting = false;
 
-  Future<bool> acceptOrder(String orderId) async {
+  Future<bool> acceptOrder(String orderId, {int? offlineRequestId}) async {
     // منع التكرار عند الضغط ع زر قبول الطلب في حالة اوفلاين (Double Tap)
     if (isAccepting) return false;
     isAccepting = true;
@@ -214,6 +225,9 @@ class AddRequestController extends BaseGetxController {
     try {
       // التحقق من الاتصال بالإنترنت
       final connectivityService = Get.find<ConnectivityService>();
+      final now = DateTime.now();
+      final processDate =
+          "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}";
 
       // إذا كان هناك اتصال، أرسل للسيرفر مباشرة
       if (connectivityService.isOnline.value) {
@@ -223,6 +237,7 @@ class AddRequestController extends BaseGetxController {
               ? 'تم قبول الطلب'
               : adminNotesController.text,
           'order_oid': orderId,
+          'process_date': processDate,
         };
 
         BaseResponse? response = await RequestsRepo.instance.postProcessOrder(
@@ -232,6 +247,21 @@ class AddRequestController extends BaseGetxController {
         DialogHelper.hideLoading();
         if (checkResponse(response, showPopup: true)) {
           return false;
+        }
+
+        // حذف طلب الاوفلاين إذا تم تحديده
+        if (offlineRequestId != null) {
+          try {
+            final dbHelper = DatabaseHelper.instance;
+            await dbHelper.delete(offlineRequestId);
+            final syncService = Get.find<SyncService>();
+            await syncService.updatePendingCount();
+            log(
+              'تم حذف طلب الاوفلاين #$offlineRequestId بعد القبول من التفاصيل',
+            );
+          } catch (e) {
+            log('خطأ في حذف طلب الاوفلاين: $e');
+          }
         }
 
         Get.back(result: true);
@@ -267,9 +297,18 @@ class AddRequestController extends BaseGetxController {
                 : adminNotesController.text,
             createdAt: DateTime.now().toIso8601String(),
             syncStatus: 'pending',
+            processDate: processDate,
           );
 
           await dbHelper.createAcceptOrder(pendingAcceptOrder);
+
+          // حذف طلب الاوفلاين إذا تم تحديده (حتى لا يظهر مرة أخرى محلياً)
+          if (offlineRequestId != null) {
+            await dbHelper.delete(offlineRequestId);
+            log(
+              'تم حذف طلب الاوفلاين #$offlineRequestId بعد القبول المحلى من التفاصيل',
+            );
+          }
 
           // تحديث القائمة في الواجهة
           if (Get.isRegistered<HomeController>()) {

@@ -3,11 +3,17 @@ import 'package:get/get.dart';
 import '../Helpers/snackbar_helper.dart';
 import '../Modules/Login/login_screen.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+import '../App/Constant.dart';
+import '../core/services/token_service.dart';
+
 class DioExceptions implements Exception {
   late String message;
 
-  DioExceptions.fromDioException(DioException DioException,
-      {bool isPopupLoading = false}) {
+  DioExceptions.fromDioException(
+    DioException DioException, {
+    bool isPopupLoading = false,
+  }) {
     switch (DioException.type) {
       case DioExceptionType.cancel:
         message = "تم إلغاء العملة";
@@ -46,7 +52,13 @@ class DioExceptions implements Exception {
       case 400:
         return 'Bad request';
       case 401:
-        Get.offAll(() => const LoginScreen());
+        // مسح بيانات الجلسة عند انتهاء الصلاحية (401)
+        TokenService.to.clearToken().then((_) async {
+          final shared = await SharedPreferences.getInstance();
+          await shared.setBool(Constants.USER_IS_LOGIN, false);
+          await shared.setString(Constants.USER_DATA, "");
+          Get.offAll(() => const LoginScreen());
+        });
         return 'غير مصرح بك يرجى تسجيل الدخول';
       case 403:
         return 'Forbidden';

@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 5,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -45,6 +45,8 @@ class DatabaseHelper {
         rubble_site_oid $textType,
         notes $textType,
         driver_oid $textType,
+        driver_name $textType,
+        reference_number $textType,
         created_at $textType,
         sync_status $textType,
         error_message $textType
@@ -59,7 +61,8 @@ class DatabaseHelper {
         notes $textType,
         created_at $textType,
         sync_status $textType,
-        error_message $textType
+        error_message $textType,
+        process_date $textType
       )
     ''');
 
@@ -84,6 +87,55 @@ class DatabaseHelper {
       ''');
 
       print('✅ Database upgraded to version $newVersion');
+      print('✅ Database upgraded to version $newVersion');
+    }
+
+    if (oldVersion < 3) {
+      // إضافة أعمدة driver_name و reference_number لجدول pending_orders
+      try {
+        await db.execute(
+          'ALTER TABLE pending_orders ADD COLUMN driver_name TEXT',
+        );
+        await db.execute(
+          'ALTER TABLE pending_orders ADD COLUMN reference_number TEXT',
+        );
+        print(
+          '✅ Database upgraded to version 3 (added driver_name & reference_number)',
+        );
+      } catch (e) {
+        print('⚠️ Error upgrading database to version 3: $e');
+      }
+    }
+
+    if (oldVersion < 4) {
+      // محاولة إصلاح الأعمدة المفقودة إذا فشل التحديث السابق
+      try {
+        await db.execute(
+          'ALTER TABLE pending_orders ADD COLUMN driver_name TEXT',
+        );
+      } catch (e) {
+        // تجاهل الخطأ إذا كان العمود موجوداً
+      }
+      try {
+        await db.execute(
+          'ALTER TABLE pending_orders ADD COLUMN reference_number TEXT',
+        );
+      } catch (e) {
+        // تجاهل الخطأ إذا كان العمود موجوداً
+      }
+      print('✅ Database upgraded to version 4 (ensured columns exist)');
+    }
+
+    if (oldVersion < 5) {
+      // إضافة عمود process_date لجدول pending_accept_orders
+      try {
+        await db.execute(
+          'ALTER TABLE pending_accept_orders ADD COLUMN process_date TEXT',
+        );
+        print('✅ Database upgraded to version 5 (added process_date)');
+      } catch (e) {
+        print('⚠️ Error upgrading database to version 5: $e');
+      }
     }
   }
 

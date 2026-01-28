@@ -66,7 +66,7 @@ class TUser extends BaseModel {
   fromJson(Map<String, dynamic> json) => TUser.fromJson(json);
 
   static Future<bool> isUserGuest() async {
-    SharedPreferences shared = await Application.sharedPreferences;
+    SharedPreferences shared = Application.sharedPreferences;
     bool isGuest = shared.getBool(Constants.USER_IS_LOGIN) ?? false;
 
     return isGuest;

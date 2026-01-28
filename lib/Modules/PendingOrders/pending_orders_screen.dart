@@ -195,16 +195,26 @@ class PendingOrdersScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             // Order details - Updated as requested
-            _buildDetailRow('الموقع', order.location ?? '-'),
-            _buildDetailRow('رقم السيارة', order.carNum ?? '-'),
+            if (order.location != null && order.location!.isNotEmpty)
+              _buildDetailRow('الموقع', order.location!),
+            if (order.carNum != null && order.carNum!.isNotEmpty)
+              _buildDetailRow('رقم السيارة', order.carNum!),
+
+            // إضافة رقم الطلب (Reference Number)
+            if (order.referenceNumber != null &&
+                order.referenceNumber!.isNotEmpty)
+              _buildDetailRow('رقم الطلب', order.referenceNumber!),
+
             _buildDetailRow(
               'اسم السائق',
               controller.getDriverName(order.driverOid),
             ),
-            _buildDetailRow(
-              'المكب',
-              controller.getSiteName(order.rubbleSiteOid),
-            ),
+
+            if (order.rubbleSiteOid != null && order.rubbleSiteOid!.isNotEmpty)
+              _buildDetailRow(
+                'المكب',
+                controller.getSiteName(order.rubbleSiteOid),
+              ),
             if (order.notes != null && order.notes!.isNotEmpty)
               _buildDetailRow('الملاحظات', order.notes!),
             if (order.syncStatus == 'failed' && order.errorMessage != null)

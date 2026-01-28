@@ -9,6 +9,8 @@ class PendingOrder extends BaseModel {
   String? rubbleSiteOid;
   String? notes;
   String? driverOid;
+  String? driverName; // اسم السائق للعرض
+  String? referenceNumber; // الرقم المرجعي
   String? createdAt;
   String? syncStatus; // 'pending', 'syncing', 'failed', 'success'
   String? errorMessage; // رسالة الخطأ في حالة فشل المزامنة
@@ -21,6 +23,8 @@ class PendingOrder extends BaseModel {
     this.rubbleSiteOid,
     this.notes,
     this.driverOid,
+    this.driverName,
+    this.referenceNumber,
     this.createdAt,
     this.syncStatus = 'pending',
     this.errorMessage,
@@ -36,6 +40,8 @@ class PendingOrder extends BaseModel {
       rubbleSiteOid: map['rubble_site_oid'] as String?,
       notes: map['notes'] as String?,
       driverOid: map['driver_oid'] as String?,
+      driverName: map['driver_name'] as String?,
+      referenceNumber: map['reference_number'] as String?,
       createdAt: map['created_at'] as String?,
       syncStatus: map['sync_status'] as String? ?? 'pending',
       errorMessage: map['error_message'] as String?,
@@ -52,6 +58,8 @@ class PendingOrder extends BaseModel {
       'rubble_site_oid': rubbleSiteOid,
       'notes': notes,
       'driver_oid': driverOid,
+      'driver_name': driverName,
+      'reference_number': referenceNumber,
       'created_at': createdAt,
       'sync_status': syncStatus,
       'error_message': errorMessage,
@@ -67,6 +75,7 @@ class PendingOrder extends BaseModel {
       'rubble_site_oid': rubbleSiteOid,
       'notes': notes,
       'driver_oid': driverOid,
+      'order_num': referenceNumber,
     };
   }
 
@@ -79,6 +88,8 @@ class PendingOrder extends BaseModel {
     String? rubbleSiteOid,
     String? notes,
     String? driverOid,
+    String? driverName,
+    String? referenceNumber,
     String? createdAt,
     String? syncStatus,
     String? errorMessage,
@@ -91,6 +102,8 @@ class PendingOrder extends BaseModel {
       rubbleSiteOid: rubbleSiteOid ?? this.rubbleSiteOid,
       notes: notes ?? this.notes,
       driverOid: driverOid ?? this.driverOid,
+      driverName: driverName ?? this.driverName,
+      referenceNumber: referenceNumber ?? this.referenceNumber,
       createdAt: createdAt ?? this.createdAt,
       syncStatus: syncStatus ?? this.syncStatus,
       errorMessage: errorMessage ?? this.errorMessage,

@@ -17,8 +17,10 @@ class TOrder extends BaseModel {
   String? processDate;
   String? driverOid;
   Site? site;
+  String? duration;
   EntryUser? entryUser;
   EntryUser? processUser;
+  Driver? driver;
 
   TOrder({
     this.oid,
@@ -37,6 +39,7 @@ class TOrder extends BaseModel {
     this.site,
     this.entryUser,
     this.processUser,
+    this.driver,
   });
   factory TOrder.fromJson(Map<String, dynamic> json) {
     log('in Torder json');
@@ -61,6 +64,7 @@ class TOrder extends BaseModel {
       processUser: json['process_user'] != null
           ? EntryUser.fromJson(json['process_user'])
           : null,
+      driver: json['driver'] != null ? Driver.fromJson(json['driver']) : null,
     );
   }
 
@@ -88,11 +92,39 @@ class TOrder extends BaseModel {
     if (processUser != null) {
       data['process_user'] = processUser!.toJson();
     }
+    if (driver != null) {
+      data['driver'] = driver!.toJson();
+    }
     return data;
   }
 
   @override
   fromJson(Map<String, dynamic> json) => TOrder.fromJson(json);
+}
+
+class Driver {
+  int? oid;
+  String? name;
+  String? mobileNum;
+  String? notes;
+
+  Driver({this.oid, this.name, this.mobileNum, this.notes});
+
+  Driver.fromJson(Map<String, dynamic> json) {
+    oid = json['oid'];
+    name = json['name'];
+    mobileNum = json['mobile_num'];
+    notes = json['notes'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {};
+    data['oid'] = oid;
+    data['name'] = name;
+    data['mobile_num'] = mobileNum;
+    data['notes'] = notes;
+    return data;
+  }
 }
 
 class Site {

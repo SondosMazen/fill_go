@@ -22,15 +22,13 @@ class BaseResponse<T> {
   bool isNestedEmpPhone = true;
 
   String? message;
-  List? errors;
+  dynamic errors;
   T? data;
   Map<String, dynamic>? pagination;
   T? msg;
   T? items;
 
-
   BaseResponse<T> fromJson(LinkedHashMap<String, dynamic> json) {
-
     return BaseResponse(
       status: json["status"],
       message: json["message"],
@@ -40,7 +38,7 @@ class BaseResponse<T> {
       data: checkAllList(json),
       msg: json["msg"] == null ? null : genericCheck(json["msg"]) as T?,
       items: json["items"] == null ? null : genericCheck(json["items"]) as T?,
- );
+    );
   }
 
   BaseResponse baseResponseFromJson(String str) => fromJson(json.decode(str));
@@ -50,9 +48,9 @@ class BaseResponse<T> {
     log('the genericChick json $json');
 
     if (json is Map<String, dynamic>) {
-     if (T == TUser) {
+      if (T == TUser) {
         return TUser.fromJson(json);
-      } 
+      }
     } else if (json is List) {
       if (T == List<TOrder>) {
         return json.map((uint) => TOrder.fromJson(uint)).toList();

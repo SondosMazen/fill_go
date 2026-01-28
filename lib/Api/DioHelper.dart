@@ -144,7 +144,7 @@ _dioInterceptor() => dioPackage.InterceptorsWrapper(
         );
       }
 
-      Future.delayed(const Duration(milliseconds: 500), () {
+      Future.delayed(Duration.zero, () {
         Get.offAllNamed('/login');
       });
 

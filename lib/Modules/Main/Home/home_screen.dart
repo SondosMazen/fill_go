@@ -8,9 +8,12 @@ import '../../../App/Constant.dart';
 import '../../../App/app.dart';
 import '../../../core/services/token_service.dart';
 import '../../../core/services/sync_service.dart';
+import '../../../core/services/connectivity_service.dart';
 import '../../../presentation/controllers/routes/app_pages.dart';
 import '../../../Helpers/assets_color.dart';
 import '../../../Helpers/font_helper.dart';
+import 'package:fill_go/Model/PendingOrder.dart';
+import 'package:fill_go/Modules/AddRequest/add_offline_request.dart';
 import 'package:fill_go/Modules/Notifications/combined_notifications_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -28,6 +31,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     controller = Get.find<HomeController>();
+    // تحديث عداد الإشعارات (المزامنة) عند الدخول
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.isRegistered<SyncService>()) {
+        Get.find<SyncService>().updatePendingCount();
+      }
+    });
   }
 
   @override
@@ -37,42 +46,56 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          centerTitle: true,
-          elevation: 0,
-          title: Text(
-            'الطلبات',
-            style: FontsAppHelper().cairoBoldFont(
-              size: 22,
-              color: Colors.white,
+    return Obx(() {
+      final isInspector = controller.isInspector;
+      return DefaultTabController(
+        length: isInspector ? 3 : 2,
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            centerTitle: true,
+            elevation: 0,
+            title: Text(
+              'الطلبات',
+              style: FontsAppHelper().cairoBoldFont(
+                size: 22,
+                color: Colors.white,
+              ),
             ),
-          ),
-          actions: [
-            // زر الإشعارات مع عداد الطلبات المعلقة
-            Obx(() {
-              try {
-                final syncService = Get.find<SyncService>();
-                final count = syncService.pendingCount.value;
-                return badges.Badge(
-                  showBadge: count > 0,
-                  badgeContent: Text(
-                    count.toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+            actions: [
+              // زر الإشعارات مع عداد الطلبات المعلقة
+              Obx(() {
+                try {
+                  final syncService = Get.find<SyncService>();
+                  final count = syncService.pendingCount.value;
+                  return badges.Badge(
+                    showBadge: count > 0,
+                    badgeContent: Text(
+                      count.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  badgeStyle: const badges.BadgeStyle(
-                    badgeColor: Colors.red,
-                    padding: EdgeInsets.all(5),
-                  ),
-                  child: IconButton(
+                    badgeStyle: const badges.BadgeStyle(
+                      badgeColor: Colors.red,
+                      padding: EdgeInsets.all(5),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.notifications_outlined,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {
+                        Get.to(() => const CombinedNotificationsScreen());
+                      },
+                    ),
+                  );
+                } catch (e) {
+                  return IconButton(
                     icon: const Icon(
                       Icons.notifications_outlined,
                       color: Colors.white,
@@ -80,56 +103,98 @@ class _HomeScreenState extends State<HomeScreen> {
                     onPressed: () {
                       Get.to(() => const CombinedNotificationsScreen());
                     },
-                  ),
-                );
-              } catch (e) {
-                return IconButton(
-                  icon: const Icon(
-                    Icons.notifications_outlined,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {
-                    Get.to(() => const CombinedNotificationsScreen());
-                  },
-                );
-              }
-            }),
-            IconButton(
-              icon: const Icon(Icons.logout_rounded, color: Colors.white),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              onPressed: () async {
-                await TokenService.to.clearToken();
-                final shared = Application.sharedPreferences;
-                await shared.setBool(Constants.USER_IS_LOGIN, false);
-                await shared.setString(Constants.USER_DATA, "");
-                Get.offAllNamed(AppPages.login);
-              },
+                  );
+                }
+              }),
+              IconButton(
+                icon: const Icon(Icons.logout_rounded, color: Colors.white),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                onPressed: () {
+                  Get.defaultDialog(
+                    title: 'تسجيل الخروج',
+                    titleStyle: FontsAppHelper().cairoBoldFont(
+                      size: 16,
+                      color: AssetsColors.color_text_black_392C23,
+                    ),
+                    content: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'هل أنت متأكد من تسجيل الخروج؟',
+                        textAlign: TextAlign.center,
+                        style: FontsAppHelper().cairoMediumFont(size: 14),
+                      ),
+                    ),
+                    confirm: ElevatedButton(
+                      onPressed: () async {
+                        await TokenService.to.clearToken();
+                        final shared = Application.sharedPreferences;
+                        await shared.setBool(Constants.USER_IS_LOGIN, false);
+                        await shared.setString(Constants.USER_DATA, "");
+                        Get.offAllNamed(AppPages.login);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AssetsColors.primaryOrange,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 8,
+                        ),
+                      ),
+                      child: Text(
+                        'نعم',
+                        style: FontsAppHelper().cairoBoldFont(
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    cancel: TextButton(
+                      onPressed: () => Get.back(),
+                      child: Text(
+                        'لا',
+                        style: FontsAppHelper().cairoBoldFont(
+                          size: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+            bottom: TabBar(
+              indicatorColor: Colors.white,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white.withOpacity(0.6),
+              labelStyle: FontsAppHelper().cairoBoldFont(size: 16),
+              unselectedLabelStyle: FontsAppHelper().cairoMediumFont(size: 16),
+              tabs: [
+                const Tab(text: 'قيد المعالجة'),
+                const Tab(text: 'تم القبول'),
+                if (isInspector) const Tab(text: 'طلبات الاوفلاين'),
+              ],
             ),
-          ],
-          bottom: TabBar(
-            indicatorColor: Colors.white,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white.withOpacity(0.6),
-            labelStyle: FontsAppHelper().cairoBoldFont(size: 16),
-            unselectedLabelStyle: FontsAppHelper().cairoMediumFont(size: 16),
-            tabs: const [
-              Tab(text: 'قيد المعالجة'),
-              Tab(text: 'تم القبول'),
+          ),
+          body: TabBarView(
+            children: [
+              _buildTab(
+                controller.filteredPendingOrders,
+                'الطلبات المضافة اليوم',
+                controller.todayAddedCount,
+              ),
+              _buildTab(
+                controller.filteredAcceptedOrders,
+                'الطلبات المقبولة اليوم',
+                controller.todayAcceptedCount,
+              ),
+              if (isInspector)
+                _buildOfflineRequestsTab(controller.filteredOfflineRequests),
             ],
           ),
-        ),
-        body: TabBarView(
-          children: [
-            _buildTab(controller.filteredPendingOrders),
-            _buildTab(controller.filteredAcceptedOrders),
-          ],
-        ),
-        floatingActionButton: Obx(
-          () => controller.isContractor
+          floatingActionButton: controller.isContractor
               ? FloatingActionButton(
                   onPressed: () async {
                     final result = await Get.to(
-                      AddRequest(
+                      () => AddRequest(
                         isDetails: false,
                         userType: controller.userType.value,
                       ),
@@ -143,13 +208,40 @@ class _HomeScreenState extends State<HomeScreen> {
                   shape: const CircleBorder(),
                   child: const Icon(Icons.add, color: Colors.white, size: 32),
                 )
+              : isInspector
+              ? Obx(() {
+                  final isOnline =
+                      Get.find<ConnectivityService>().isOnline.value;
+                  if (isOnline) return const SizedBox.shrink();
+
+                  return FloatingActionButton.extended(
+                    onPressed: () async {
+                      final result = await Get.to(
+                        () => const AddOfflineRequest(),
+                      );
+                      if (result == true) {
+                        controller.loadOfflineRequests();
+                      }
+                    },
+                    backgroundColor: AssetsColors.primaryOrange,
+                    elevation: 8,
+                    label: Text(
+                      'اضافة طلب اوفلاين',
+                      style: FontsAppHelper().cairoBoldFont(
+                        size: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                    icon: const Icon(Icons.add, color: Colors.white, size: 24),
+                  );
+                })
               : const SizedBox.shrink(),
         ),
-      ),
-    );
+      );
+    });
   }
 
-  Widget _buildTab(RxList<dynamic> ordersList) {
+  Widget _buildTab(RxList<dynamic> ordersList, String title, RxInt count) {
     return RefreshIndicator(
       onRefresh: () => controller.getOrders(),
       color: AssetsColors.primaryOrange,
@@ -157,11 +249,25 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Obx(() {
         // عرض مؤشر التحميل عند تحميل البيانات
         if (controller.isLoading) {
-          return const Center(
+          return Center(
             child: Padding(
-              padding: EdgeInsets.only(top: 200),
-              child: CircularProgressIndicator(
-                color: AssetsColors.primaryOrange,
+              padding: const EdgeInsets.only(top: 200),
+              child: Column(
+                children: [
+                  const CircularProgressIndicator(
+                    color: AssetsColors.primaryOrange,
+                  ),
+                  if (controller.loadingMessage.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      controller.loadingMessage.value,
+                      style: FontsAppHelper().cairoBoldFont(
+                        size: 14,
+                        color: AssetsColors.primaryOrange,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           );
@@ -172,6 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
+              _buildDailyStatsCard(title, count),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
                 child: Container(
@@ -255,6 +362,282 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       }),
+    );
+  }
+
+  Widget _buildOfflineRequestsTab(RxList<PendingOrder> ordersList) {
+    return Obx(() {
+      if (ordersList.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.wifi_off_rounded,
+                size: 80,
+                color: Colors.grey.shade300,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'لا توجد طلبات اوفلاين',
+                style: FontsAppHelper().cairoBoldFont(
+                  size: 18,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+      return ListView.builder(
+        itemCount: ordersList.length,
+        padding: const EdgeInsets.all(16),
+        itemBuilder: (context, index) {
+          final order = ordersList[index];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'طلب اوفلاين #${order.id}',
+                      style: FontsAppHelper().cairoBoldFont(
+                        size: 16,
+                        color: AssetsColors.primaryOrange,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        // IconButton(
+                        //   onPressed: () => controller.retrySyncRequest(order),
+                        //   icon: const Icon(
+                        //     Icons.refresh_rounded,
+                        //     color: Colors.green,
+                        //   ),
+                        //   tooltip: 'إعادة المحاولة',
+                        // ),
+                        IconButton(
+                          onPressed: () {
+                            Get.defaultDialog(
+                              title: 'حذف الطلب',
+                              titleStyle: FontsAppHelper().cairoBoldFont(
+                                size: 16,
+                                color: AssetsColors.color_text_black_392C23,
+                              ),
+                              content: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: Text(
+                                  'هل أنت متأكد من حذف هذا الطلب؟',
+                                  textAlign: TextAlign.center,
+                                  style: FontsAppHelper().cairoMediumFont(
+                                    size: 14,
+                                  ),
+                                ),
+                              ),
+                              confirm: ElevatedButton(
+                                onPressed: () {
+                                  Get.back(); // close dialog
+                                  controller.deleteOfflineRequest(order.id!);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 8,
+                                  ),
+                                ),
+                                child: Text(
+                                  'حذف',
+                                  style: FontsAppHelper().cairoBoldFont(
+                                    size: 14,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              cancel: TextButton(
+                                onPressed: () => Get.back(),
+                                child: Text(
+                                  'إلغاء',
+                                  style: FontsAppHelper().cairoBoldFont(
+                                    size: 14,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                          ),
+                          tooltip: 'حذف',
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (order.referenceNumber != null &&
+                    order.referenceNumber!.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      const Icon(Icons.numbers, size: 20, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      Text(
+                        'الرقم المرجعي: ${order.referenceNumber}',
+                        style: FontsAppHelper().cairoMediumFont(size: 14),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                if (order.carNum != null && order.carNum!.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.directions_car,
+                        size: 20,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'السيارة: ${order.carNum}',
+                        style: FontsAppHelper().cairoMediumFont(size: 14),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                Row(
+                  children: [
+                    const Icon(Icons.domain, size: 20, color: Colors.grey),
+                    const SizedBox(width: 8),
+                    Text(
+                      'المكب: ${controller.getSiteName(order.rubbleSiteOid)}',
+                      style: FontsAppHelper().cairoMediumFont(size: 14),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.person_outline,
+                      size: 20,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'السائق: ${order.driverName ?? order.driverOid ?? '-'}',
+                      style: FontsAppHelper().cairoMediumFont(size: 14),
+                    ),
+                  ],
+                ),
+                if (order.notes != null && order.notes!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.note_outlined,
+                        size: 20,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          order.notes!,
+                          style: FontsAppHelper().cairoRegularFont(size: 14),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 12),
+                Text(
+                  order.createdAt?.replaceAll('T', ' ').substring(0, 16) ?? '',
+                  style: FontsAppHelper().cairoRegularFont(
+                    size: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    });
+  }
+
+  Widget _buildDailyStatsCard(String title, RxInt count) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: AssetsColors.primaryOrange.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: AssetsColors.primaryOrange.withOpacity(0.15),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AssetsColors.primaryOrange,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.calendar_today_rounded,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  title,
+                  style: FontsAppHelper().cairoBoldFont(
+                    size: 13,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            ),
+            Obx(() {
+              return Text(
+                '${count.value}',
+                style: FontsAppHelper().cairoBoldFont(
+                  size: 18,
+                  color: AssetsColors.primaryOrange,
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
     );
   }
 }

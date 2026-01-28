@@ -22,6 +22,7 @@ class AssetsColors {
   static const color_black_202020 = Color(0xFF202020);
   static const lightGreen = Color(0x803EC4B5);
   static const color_white = Color(0xFFFFFFFF);
+  static const Color darkBerry = Color(0xFF7A1E48);
 
   static const color_screen_background = Color(0xFFFAFAFA);
   static const border_color_EFEFF5 = Color(0xffEFEFF5);

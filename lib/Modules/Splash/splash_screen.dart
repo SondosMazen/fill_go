@@ -35,21 +35,15 @@ class _LaunchScreenState extends State<LaunchScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: const Color(0xFFFAFAFA),
-      body: Stack(
-        children: [
-          Container(
-            color: const Color(0xFFFAFAFA),
-            alignment: AlignmentDirectional.center,
-            child: Image.asset(
-              AssetsHelper.getAssetPNG("ic_splash_bkg"),
-              fit: BoxFit.cover,
-            ),
-          ),
-          Container(
-            alignment: AlignmentDirectional.center,
-            child: Image.asset(AssetsHelper.getAssetPNG("ic_logo_splash")),
-          ),
-        ],
+      body: Container(
+        alignment: AlignmentDirectional.center,
+        color: const Color(0xFFFAFAFA),
+        child: Image.asset(
+          AssetsHelper.getAssetPNG("rubble_app_icon"),
+          width:
+              350, // Set a reasonable width to prevent it from being too large or small
+          height: 350,
+        ),
       ),
     );
   }
