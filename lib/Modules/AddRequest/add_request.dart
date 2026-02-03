@@ -1,13 +1,13 @@
-import 'package:fill_go/Helpers/assets_color.dart';
-import 'package:fill_go/Helpers/assets_helper.dart';
-import 'package:fill_go/Modules/AddRequest/add_request_controller.dart';
-import 'package:fill_go/Widgets/custom_widgets.dart';
+import 'package:rubble_app/Helpers/assets_color.dart';
+import 'package:rubble_app/Helpers/assets_helper.dart';
+import 'package:rubble_app/Modules/AddRequest/add_request_controller.dart';
+import 'package:rubble_app/Widgets/custom_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:searchfield/searchfield.dart';
-import 'package:fill_go/Modules/Main/Home/matching_offline_requests_screen.dart';
-import 'package:fill_go/Modules/Main/Home/home_controller.dart';
+import 'package:rubble_app/Modules/Main/Home/matching_offline_requests_screen.dart';
+import 'package:rubble_app/Modules/Main/Home/home_controller.dart';
 
 class AddRequest extends StatefulWidget {
   String? location;
@@ -109,6 +109,7 @@ class _AddRequestState extends State<AddRequest> {
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: GetBuilder<AddRequestController>(
+            init: AddRequestController(),
             builder: (controller) {
               String driverName = widget.driver ?? '';
               for (
@@ -164,6 +165,7 @@ class _AddRequestState extends State<AddRequest> {
                             _buildLabel('رقم الطلب'),
                             MyTextField(
                               isEnabled: !widget.isDetails,
+                              textInputType: TextInputType.number,
                               filled: true,
                               fillColor: const Color(0xFFFAFAFA),
                               hint: widget.orderNum ?? 'أدخل رقم الطلب',
@@ -470,83 +472,109 @@ class _AddRequestState extends State<AddRequest> {
                                       ))) ||
                                   widget.isAccepted))
                           ? const SizedBox()
-                          : MyCustomButton(
-                              text: widget.isDetails
-                                  ? 'قبول الطلب'
-                                  : 'حفظ الطلب',
-                              backgroundColor: widget.isDetails
-                                  ? AssetsColors.color_green_3EC4B5
-                                  : AssetsColors.primaryOrange,
-                              onPressed: () {
-                                if (widget.isDetails &&
-                                    (widget.userType == "1" ||
-                                        widget.userType.toLowerCase().contains(
-                                          "inspector",
-                                        ))) {
-                                  if (widget.orderId != null) {
-                                    // التحقق من وجود طلبات اوفلاين مطابقة
-                                    bool matchFound = false;
+                          : Builder(
+                              builder: (context) {
+                                bool isLocallyAccepted = false;
+                                if (Get.isRegistered<HomeController>()) {
+                                  isLocallyAccepted = Get.find<HomeController>()
+                                      .isOrderAcceptedLocally(widget.orderId);
+                                }
 
-                                    if (Get.isRegistered<HomeController>()) {
-                                      final homeController =
-                                          Get.find<HomeController>();
-                                      String currentDriverName = '';
+                                if (isLocallyAccepted && widget.isDetails) {
+                                  return MyCustomButton(
+                                    text: 'تم الحفظ محلياً',
+                                    backgroundColor: Colors.grey,
+                                    onPressed: () {}, // Disabled action
+                                  );
+                                }
 
-                                      // البحث عن اسم السائق الحالي
-                                      if (controller.tDrivers != null) {
-                                        for (var d in controller.tDrivers!) {
-                                          if (d.oid.toString() ==
-                                              widget.driver) {
-                                            currentDriverName = d.name ?? '';
-                                            break;
+                                return MyCustomButton(
+                                  text: widget.isDetails
+                                      ? 'قبول الطلب'
+                                      : 'حفظ الطلب',
+                                  backgroundColor: widget.isDetails
+                                      ? AssetsColors.color_green_3EC4B5
+                                      : AssetsColors.primaryOrange,
+                                  onPressed: () {
+                                    if (widget.isDetails &&
+                                        (widget.userType == "1" ||
+                                            widget.userType
+                                                .toLowerCase()
+                                                .contains("inspector"))) {
+                                      if (widget.orderId != null) {
+                                        // التحقق من وجود طلبات اوفلاين مطابقة
+                                        bool matchFound = false;
+
+                                        if (Get.isRegistered<
+                                          HomeController
+                                        >()) {
+                                          final homeController =
+                                              Get.find<HomeController>();
+                                          String currentDriverName = '';
+
+                                          // البحث عن اسم السائق الحالي
+                                          if (controller.tDrivers != null) {
+                                            for (var d
+                                                in controller.tDrivers!) {
+                                              if (d.oid.toString() ==
+                                                  widget.driver) {
+                                                currentDriverName =
+                                                    d.name ?? '';
+                                                break;
+                                              }
+                                            }
                                           }
-                                        }
-                                      }
 
-                                      if (currentDriverName.isNotEmpty) {
-                                        final matches = homeController
-                                            .getOfflineMatches(
-                                              currentDriverName,
-                                            );
-                                        if (matches.isNotEmpty) {
-                                          matchFound = true;
-                                          Get.to(
-                                            () => MatchingOfflineRequestsScreen(
-                                              matchingRequests: matches,
-                                              driverName: currentDriverName,
-                                              onlineOrderNumber:
-                                                  widget.orderNum,
-                                              onConfirm:
-                                                  (selectedOfflineRequestId) {
-                                                    Future.delayed(
-                                                      const Duration(
-                                                        milliseconds: 300,
-                                                      ),
-                                                      () {
-                                                        controller.acceptOrder(
-                                                          widget.orderId!,
-                                                          offlineRequestId:
-                                                              selectedOfflineRequestId,
+                                          if (currentDriverName.isNotEmpty) {
+                                            final matches = homeController
+                                                .getOfflineMatches(
+                                                  currentDriverName,
+                                                );
+                                            if (matches.isNotEmpty) {
+                                              matchFound = true;
+                                              Get.to(
+                                                () => MatchingOfflineRequestsScreen(
+                                                  matchingRequests: matches,
+                                                  driverName: currentDriverName,
+                                                  onlineOrderNumber:
+                                                      widget.orderNum,
+                                                  onConfirm:
+                                                      (
+                                                        selectedOfflineRequestId,
+                                                      ) {
+                                                        Future.delayed(
+                                                          const Duration(
+                                                            milliseconds: 300,
+                                                          ),
+                                                          () {
+                                                            controller.acceptOrder(
+                                                              widget.orderId!,
+                                                              offlineRequestId:
+                                                                  selectedOfflineRequestId,
+                                                            );
+                                                          },
                                                         );
                                                       },
-                                                    );
-                                                  },
-                                            ),
+                                                ),
+                                              );
+                                            }
+                                          }
+                                        }
+
+                                        if (!matchFound) {
+                                          controller.acceptOrder(
+                                            widget.orderId!,
                                           );
                                         }
                                       }
+                                    } else {
+                                      if (controller.formKey.currentState!
+                                          .validate()) {
+                                        controller.postStoreOrder();
+                                      }
                                     }
-
-                                    if (!matchFound) {
-                                      controller.acceptOrder(widget.orderId!);
-                                    }
-                                  }
-                                } else {
-                                  if (controller.formKey.currentState!
-                                      .validate()) {
-                                    controller.postStoreOrder();
-                                  }
-                                }
+                                  },
+                                );
                               },
                             ),
                     ),

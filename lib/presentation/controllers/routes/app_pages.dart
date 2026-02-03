@@ -1,10 +1,10 @@
-import 'package:fill_go/Modules/Login/login_screen.dart';
-import 'package:fill_go/Modules/Main/Home/home_screen.dart';
-import 'package:fill_go/Modules/PendingOrders/pending_orders_screen.dart';
+import 'package:rubble_app/Modules/Login/login_screen.dart';
+import 'package:rubble_app/Modules/Main/Home/home_screen.dart';
+import 'package:rubble_app/Modules/PendingOrders/pending_orders_screen.dart';
 import 'package:get/get.dart';
-import 'package:fill_go/Modules/Splash/splash_screen.dart';
-import 'package:fill_go/presentation/controllers/bindings/auth_binding.dart';
-import 'package:fill_go/presentation/controllers/bindings/initial_binding.dart';
+import 'package:rubble_app/Modules/Splash/splash_screen.dart';
+import 'package:rubble_app/presentation/controllers/bindings/auth_binding.dart';
+import 'package:rubble_app/presentation/controllers/bindings/initial_binding.dart';
 
 /// مسارات التطبيق
 abstract class AppPages {

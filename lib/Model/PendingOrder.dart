@@ -1,4 +1,4 @@
-import 'package:fill_go/Model/BaseModel.dart';
+import 'package:rubble_app/Model/BaseModel.dart';
 
 ///(Pending Order) يُستخدم لحفظ الطلبات محلياً عند عدم توفر الإنترنت
 class PendingOrder extends BaseModel {
@@ -14,6 +14,7 @@ class PendingOrder extends BaseModel {
   String? createdAt;
   String? syncStatus; // 'pending', 'syncing', 'failed', 'success'
   String? errorMessage; // رسالة الخطأ في حالة فشل المزامنة
+  String? userId; // معرف المستخدم الذي أنشأ الطلب
 
   PendingOrder({
     this.id,
@@ -28,6 +29,7 @@ class PendingOrder extends BaseModel {
     this.createdAt,
     this.syncStatus = 'pending',
     this.errorMessage,
+    this.userId,
   });
 
   /// تحويل من Map (من قاعدة البيانات)
@@ -45,6 +47,7 @@ class PendingOrder extends BaseModel {
       createdAt: map['created_at'] as String?,
       syncStatus: map['sync_status'] as String? ?? 'pending',
       errorMessage: map['error_message'] as String?,
+      userId: map['user_id'] as String?,
     );
   }
 
@@ -63,6 +66,7 @@ class PendingOrder extends BaseModel {
       'created_at': createdAt,
       'sync_status': syncStatus,
       'error_message': errorMessage,
+      'user_id': userId,
     };
   }
 
@@ -93,6 +97,7 @@ class PendingOrder extends BaseModel {
     String? createdAt,
     String? syncStatus,
     String? errorMessage,
+    String? userId,
   }) {
     return PendingOrder(
       id: id ?? this.id,
@@ -107,6 +112,7 @@ class PendingOrder extends BaseModel {
       createdAt: createdAt ?? this.createdAt,
       syncStatus: syncStatus ?? this.syncStatus,
       errorMessage: errorMessage ?? this.errorMessage,
+      userId: userId ?? this.userId,
     );
   }
 
@@ -115,6 +121,6 @@ class PendingOrder extends BaseModel {
 
   @override
   String toString() {
-    return 'PendingOrder(id: $id, location: $location, carNum: $carNum, syncStatus: $syncStatus)';
+    return 'PendingOrder(id: $id, location: $location, carNum: $carNum, syncStatus: $syncStatus, userId: $userId)';
   }
 }

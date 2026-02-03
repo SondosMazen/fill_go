@@ -1,9 +1,9 @@
-import 'package:fill_go/Modules/PendingOrders/pending_orders_controller.dart';
-import 'package:fill_go/core/services/sync_service.dart';
+import 'package:rubble_app/Modules/PendingOrders/pending_orders_controller.dart';
+import 'package:rubble_app/core/services/sync_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:fill_go/Helpers/assets_color.dart';
-import 'package:fill_go/Helpers/font_helper.dart';
+import 'package:rubble_app/Helpers/assets_color.dart';
+import 'package:rubble_app/Helpers/font_helper.dart';
 
 /// شاشة الطلبات المعلقة (Offline Orders)
 class PendingOrdersScreen extends StatelessWidget {

@@ -1,18 +1,18 @@
 import 'dart:developer';
 import 'dart:ui';
-import 'package:fill_go/Api/BaseResponse.dart';
-import 'package:fill_go/Model/TUser.dart';
+import 'package:rubble_app/Api/BaseResponse.dart';
+import 'package:rubble_app/Model/TUser.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:fill_go/Helpers/assets_color.dart';
-import 'package:fill_go/Helpers/assets_helper.dart';
-import 'package:fill_go/Modules/Login/login_controller.dart';
-import 'package:fill_go/Widgets/custom_widgets.dart';
+import 'package:rubble_app/Helpers/assets_color.dart';
+import 'package:rubble_app/Helpers/assets_helper.dart';
+import 'package:rubble_app/Modules/Login/login_controller.dart';
+import 'package:rubble_app/Widgets/custom_widgets.dart';
 import '../../App/Constant.dart';
 import '../../App/app.dart';
 import '../../presentation/controllers/controllers/auth_controller.dart';
-import 'package:fill_go/presentation/controllers/routes/app_pages.dart';
+import 'package:rubble_app/presentation/controllers/routes/app_pages.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -218,7 +218,10 @@ class _LoginScreenState extends State<LoginScreen> {
       if (tUserResponse!.message == null) return;
       if (tUserResponse.status!) {
         TUser user = tUserResponse.data!;
-        final userType = user.userType?.toString() ?? '1';
+        String userType = '1';
+        if (user.userType == UserType.contractor) {
+          userType = '2';
+        }
         await Application.sharedPreferences.setString(
           Constants.USER_TYPE,
           userType,

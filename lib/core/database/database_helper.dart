@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'package:fill_go/Model/PendingOrder.dart';
-import 'package:fill_go/Model/PendingAcceptOrder.dart';
+import 'package:rubble_app/Model/PendingOrder.dart';
+import 'package:rubble_app/Model/PendingAcceptOrder.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 5,
+      version: 7,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -49,7 +49,8 @@ class DatabaseHelper {
         reference_number $textType,
         created_at $textType,
         sync_status $textType,
-        error_message $textType
+        error_message $textType,
+        user_id $textType
       )
     ''');
 
@@ -62,7 +63,8 @@ class DatabaseHelper {
         created_at $textType,
         sync_status $textType,
         error_message $textType,
-        process_date $textType
+        process_date $textType,
+        user_id $textType
       )
     ''');
 
@@ -135,6 +137,52 @@ class DatabaseHelper {
         print('✅ Database upgraded to version 5 (added process_date)');
       } catch (e) {
         print('⚠️ Error upgrading database to version 5: $e');
+      }
+    }
+
+    if (oldVersion < 6) {
+      // إضافة عمود user_id لجدولي pending_orders و pending_accept_orders
+      try {
+        await db.execute('ALTER TABLE pending_orders ADD COLUMN user_id TEXT');
+        print(
+          '✅ Database upgraded to version 6 (added user_id to pending_orders)',
+        );
+      } catch (e) {
+        print('⚠️ Error adding user_id to pending_orders: $e');
+      }
+
+      try {
+        await db.execute(
+          'ALTER TABLE pending_accept_orders ADD COLUMN user_id TEXT',
+        );
+        print(
+          '✅ Database upgraded to version 6 (added user_id to pending_accept_orders)',
+        );
+      } catch (e) {
+        print('⚠️ Error adding user_id to pending_accept_orders: $e');
+      }
+    }
+
+    if (oldVersion < 7) {
+      // Ensure user_id column exists (fix for missing column issue)
+      try {
+        await db.execute('ALTER TABLE pending_orders ADD COLUMN user_id TEXT');
+        print(
+          '✅ Database upgraded to version 7 (ENSURED user_id to pending_orders)',
+        );
+      } catch (e) {
+        // user_id likely already exists
+      }
+
+      try {
+        await db.execute(
+          'ALTER TABLE pending_accept_orders ADD COLUMN user_id TEXT',
+        );
+        print(
+          '✅ Database upgraded to version 7 (ENSURED user_id to pending_accept_orders)',
+        );
+      } catch (e) {
+        // user_id likely already exists
       }
     }
   }

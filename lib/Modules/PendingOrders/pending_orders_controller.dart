@@ -1,14 +1,15 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:fill_go/Helpers/assets_color.dart';
-import 'package:fill_go/Helpers/font_helper.dart';
-import 'package:fill_go/Model/PendingOrder.dart';
-import 'package:fill_go/Model/TDriver.dart';
-import 'package:fill_go/Model/TSite.dart';
-import 'package:fill_go/core/database/database_helper.dart';
-import 'package:fill_go/core/services/sync_service.dart';
+import 'package:rubble_app/Helpers/assets_color.dart';
+import 'package:rubble_app/Helpers/font_helper.dart';
+import 'package:rubble_app/Model/PendingOrder.dart';
+import 'package:rubble_app/Model/TDriver.dart';
+import 'package:rubble_app/Model/TSite.dart';
+import 'package:rubble_app/core/database/database_helper.dart';
+import 'package:rubble_app/core/services/sync_service.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rubble_app/App/Constant.dart';
 
 /// Controller لشاشة الطلبات المعلقة
 class PendingOrdersController extends GetxController {
@@ -101,8 +102,27 @@ class PendingOrdersController extends GetxController {
   Future<void> loadPendingOrders() async {
     isLoading.value = true;
     try {
+      final prefs = await SharedPreferences.getInstance();
+      String? currentUserId;
+      final userDataStr = prefs.getString(
+        Constants.USER_DATA,
+      ); //Constants.USER_DATA
+      if (userDataStr != null) {
+        final userData = jsonDecode(userDataStr);
+        currentUserId = userData['oid']?.toString();
+      }
+
       final orders = await _dbHelper.readAll();
-      pendingOrders.value = orders;
+
+      if (currentUserId != null) {
+        pendingOrders.value = orders
+            .where((o) => o.userId == currentUserId)
+            .toList();
+      } else {
+        // If no user logged in (rare case for this screen), maybe show empty or all?
+        // Safer to show empty to avoid data leak.
+        pendingOrders.value = [];
+      }
     } catch (e) {
       print('Error loading pending orders: $e');
     } finally {

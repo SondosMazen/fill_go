@@ -1,4 +1,4 @@
-import 'package:fill_go/Model/BaseModel.dart';
+import 'package:rubble_app/Model/BaseModel.dart';
 
 class TDriver extends BaseModel {
   int? oid;

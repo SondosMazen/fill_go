@@ -1,6 +1,6 @@
-import 'package:fill_go/Helpers/assets_color.dart';
-import 'package:fill_go/Helpers/font_helper.dart';
-import 'package:fill_go/Model/PendingOrder.dart';
+import 'package:rubble_app/Helpers/assets_color.dart';
+import 'package:rubble_app/Helpers/font_helper.dart';
+import 'package:rubble_app/Model/PendingOrder.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -37,8 +37,12 @@ class _MatchingOfflineRequestsScreenState
     // Sort logic: matching reference number comes first
     if (widget.onlineOrderNumber != null) {
       sortedRequests.sort((a, b) {
-        final aMatch = a.referenceNumber == widget.onlineOrderNumber;
-        final bMatch = b.referenceNumber == widget.onlineOrderNumber;
+        final aMatch =
+            a.referenceNumber?.trim().toLowerCase() ==
+            widget.onlineOrderNumber?.trim().toLowerCase();
+        final bMatch =
+            b.referenceNumber?.trim().toLowerCase() ==
+            widget.onlineOrderNumber?.trim().toLowerCase();
         if (aMatch && !bMatch) return -1;
         if (!aMatch && bMatch) return 1;
         return 0; // Keep original order otherwise
@@ -46,7 +50,9 @@ class _MatchingOfflineRequestsScreenState
 
       // Auto-select the matching request if there is one
       final match = sortedRequests.firstWhereOrNull(
-        (r) => r.referenceNumber == widget.onlineOrderNumber,
+        (r) =>
+            r.referenceNumber?.trim().toLowerCase() ==
+            widget.onlineOrderNumber?.trim().toLowerCase(),
       );
       if (match != null) {
         _selectedRequestId = match.id;
@@ -105,7 +111,8 @@ class _MatchingOfflineRequestsScreenState
                 final isReferenceMatch =
                     req.referenceNumber != null &&
                     widget.onlineOrderNumber != null &&
-                    req.referenceNumber == widget.onlineOrderNumber;
+                    req.referenceNumber!.trim().toLowerCase() ==
+                        widget.onlineOrderNumber!.trim().toLowerCase();
 
                 return GestureDetector(
                   onTap: () {
@@ -120,9 +127,7 @@ class _MatchingOfflineRequestsScreenState
                       color: isSelected
                           ? Colors.orange.shade50
                           : isReferenceMatch
-                          ? const Color(
-                              0xFFE8F5E9,
-                            ) // Light Green for suggested match
+                          ? const Color(0xFFDCEDC8) // Stronger Light Green
                           : Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
@@ -188,15 +193,36 @@ class _MatchingOfflineRequestsScreenState
                                               : AssetsColors.primaryOrange,
                                         ),
                                       ),
-                                      Text(
-                                        req.createdAt?.substring(0, 10) ?? '',
-                                        style: FontsAppHelper()
-                                            .cairoRegularFont(
-                                              size: 12,
-                                              color: Colors.grey,
+                                      if (isReferenceMatch)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.green,
+                                            borderRadius: BorderRadius.circular(
+                                              8,
                                             ),
-                                      ),
+                                          ),
+                                          child: Text(
+                                            'مطابق',
+                                            style: FontsAppHelper()
+                                                .cairoBoldFont(
+                                                  size: 10,
+                                                  color: Colors.white,
+                                                ),
+                                          ),
+                                        ),
                                     ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    req.createdAt?.substring(0, 10) ?? '',
+                                    style: FontsAppHelper().cairoRegularFont(
+                                      size: 12,
+                                      color: Colors.grey,
+                                    ),
                                   ),
                                 ],
                               ),

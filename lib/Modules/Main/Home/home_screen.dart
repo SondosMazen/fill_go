@@ -1,20 +1,20 @@
-import 'package:fill_go/Modules/AddRequest/add_request.dart';
-import 'package:fill_go/Modules/Main/Home/home_controller.dart';
-import 'package:fill_go/Modules/Main/Home/widgets/request_card.dart';
+import 'package:rubble_app/Modules/AddRequest/add_request.dart';
+import 'package:rubble_app/Modules/Main/Home/home_controller.dart';
+import 'package:rubble_app/Modules/Main/Home/widgets/request_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:badges/badges.dart' as badges;
 import '../../../App/Constant.dart';
 import '../../../App/app.dart';
-import '../../../core/services/token_service.dart';
+
 import '../../../core/services/sync_service.dart';
 import '../../../core/services/connectivity_service.dart';
 import '../../../presentation/controllers/routes/app_pages.dart';
 import '../../../Helpers/assets_color.dart';
 import '../../../Helpers/font_helper.dart';
-import 'package:fill_go/Model/PendingOrder.dart';
-import 'package:fill_go/Modules/AddRequest/add_offline_request.dart';
-import 'package:fill_go/Modules/Notifications/combined_notifications_screen.dart';
+import 'package:rubble_app/Model/PendingOrder.dart';
+import 'package:rubble_app/Modules/AddRequest/add_offline_request.dart';
+import 'package:rubble_app/Modules/Notifications/combined_notifications_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -110,6 +110,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: const Icon(Icons.logout_rounded, color: Colors.white),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 onPressed: () {
+                  // Check connectivity
+                  final isOnline =
+                      Get.find<ConnectivityService>().isOnline.value;
+
                   Get.defaultDialog(
                     title: 'تسجيل الخروج',
                     titleStyle: FontsAppHelper().cairoBoldFont(
@@ -119,17 +123,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     content: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
-                        'هل أنت متأكد من تسجيل الخروج؟',
+                        isOnline
+                            ? 'هل أنت متأكد من تسجيل الخروج؟'
+                            : 'أنت غير متصل بالإنترنت. تسجيل الخروج سيكون محلياً فقط، ويمكنك العودة بنفس الحساب.',
                         textAlign: TextAlign.center,
                         style: FontsAppHelper().cairoMediumFont(size: 14),
                       ),
                     ),
                     confirm: ElevatedButton(
                       onPressed: () async {
-                        await TokenService.to.clearToken();
                         final shared = Application.sharedPreferences;
+
+                        if (isOnline) {
+                          // Online: We still want to keep data for potential offline re-login
+                          // So we DO NOT clear token or user data here.
+                          // Unless we strictly want to prevent offline login after online logout.
+                          // But the requirement is to allow it.
+
+                          // Optional: Call server logout API if exists (UserAuthController.postUserAuthLogOut)
+                          // But currently not implemented here.
+                        } else {
+                          // Offline: Soft logout (Keep token & user data)
+                        }
+
                         await shared.setBool(Constants.USER_IS_LOGIN, false);
-                        await shared.setString(Constants.USER_DATA, "");
                         Get.offAllNamed(AppPages.login);
                       },
                       style: ElevatedButton.styleFrom(
@@ -366,225 +383,300 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildOfflineRequestsTab(RxList<PendingOrder> ordersList) {
-    return Obx(() {
-      if (ordersList.isEmpty) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.wifi_off_rounded,
-                size: 80,
-                color: Colors.grey.shade300,
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.shade200),
               ),
-              const SizedBox(height: 16),
-              Text(
-                'لا توجد طلبات اوفلاين',
-                style: FontsAppHelper().cairoBoldFont(
-                  size: 18,
-                  color: Colors.grey,
-                ),
-              ),
-            ],
-          ),
-        );
-      }
-      return ListView.builder(
-        itemCount: ordersList.length,
-        padding: const EdgeInsets.all(16),
-        itemBuilder: (context, index) {
-          final order = ordersList[index];
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'طلب اوفلاين #${order.id}',
-                      style: FontsAppHelper().cairoBoldFont(
-                        size: 16,
-                        color: AssetsColors.primaryOrange,
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) => controller.search(value),
+                style: FontsAppHelper().cairoMediumFont(size: 15),
+                decoration: InputDecoration(
+                  hintText: 'ابحث عن الرقم المرجعي أو اسم السائق...',
+                  hintStyle: FontsAppHelper().cairoRegularFont(
+                    color: Colors.grey.shade500,
+                    size: 14,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search_rounded,
+                    color: AssetsColors.primaryOrange.withOpacity(0.7),
+                    size: 22,
+                  ),
+                  // عداد الطلبات على أقصى اليسار
+                  suffixIcon: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Obx(
+                      () => Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AssetsColors.primaryOrange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${controller.totalOfflineAddedToday.value}',
+                          style: FontsAppHelper().cairoBoldFont(
+                            size: 14,
+                            color: AssetsColors.primaryOrange,
+                          ),
+                        ),
                       ),
                     ),
-                    Row(
-                      children: [
-                        // IconButton(
-                        //   onPressed: () => controller.retrySyncRequest(order),
-                        //   icon: const Icon(
-                        //     Icons.refresh_rounded,
-                        //     color: Colors.green,
-                        //   ),
-                        //   tooltip: 'إعادة المحاولة',
-                        // ),
-                        IconButton(
-                          onPressed: () {
-                            Get.defaultDialog(
-                              title: 'حذف الطلب',
-                              titleStyle: FontsAppHelper().cairoBoldFont(
-                                size: 16,
-                                color: AssetsColors.color_text_black_392C23,
-                              ),
-                              content: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
-                                child: Text(
-                                  'هل أنت متأكد من حذف هذا الطلب؟',
-                                  textAlign: TextAlign.center,
-                                  style: FontsAppHelper().cairoMediumFont(
-                                    size: 14,
-                                  ),
-                                ),
-                              ),
-                              confirm: ElevatedButton(
-                                onPressed: () {
-                                  Get.back(); // close dialog
-                                  controller.deleteOfflineRequest(order.id!);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                    vertical: 8,
-                                  ),
-                                ),
-                                child: Text(
-                                  'حذف',
-                                  style: FontsAppHelper().cairoBoldFont(
-                                    size: 14,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              cancel: TextButton(
-                                onPressed: () => Get.back(),
-                                child: Text(
-                                  'إلغاء',
-                                  style: FontsAppHelper().cairoBoldFont(
-                                    size: 14,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                          icon: const Icon(
-                            Icons.delete_outline,
-                            color: Colors.red,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 16,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Obx(() {
+            if (ordersList.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 80),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.wifi_off_rounded,
+                        size: 80,
+                        color: Colors.grey.shade300,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'لا توجد طلبات اوفلاين',
+                        style: FontsAppHelper().cairoBoldFont(
+                          size: 18,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: ordersList.length,
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+              itemBuilder: (context, index) {
+                final order = ordersList[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'طلب اوفلاين #${order.id}',
+                            style: FontsAppHelper().cairoBoldFont(
+                              size: 16,
+                              color: AssetsColors.primaryOrange,
+                            ),
                           ),
-                          tooltip: 'حذف',
+                          Row(
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  Get.defaultDialog(
+                                    title: 'حذف الطلب',
+                                    titleStyle: FontsAppHelper().cairoBoldFont(
+                                      size: 16,
+                                      color:
+                                          AssetsColors.color_text_black_392C23,
+                                    ),
+                                    content: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                      ),
+                                      child: Text(
+                                        'هل أنت متأكد من حذف هذا الطلب؟',
+                                        textAlign: TextAlign.center,
+                                        style: FontsAppHelper().cairoMediumFont(
+                                          size: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    confirm: ElevatedButton(
+                                      onPressed: () {
+                                        Get.back(); // close dialog
+                                        controller.deleteOfflineRequest(
+                                          order.id!,
+                                        );
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 24,
+                                          vertical: 8,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'حذف',
+                                        style: FontsAppHelper().cairoBoldFont(
+                                          size: 14,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                    cancel: TextButton(
+                                      onPressed: () => Get.back(),
+                                      child: Text(
+                                        'إلغاء',
+                                        style: FontsAppHelper().cairoBoldFont(
+                                          size: 14,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red,
+                                ),
+                                tooltip: 'حذف',
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      if (order.referenceNumber != null &&
+                          order.referenceNumber!.isNotEmpty) ...[
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.numbers,
+                              size: 20,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'الرقم المرجعي: ${order.referenceNumber}',
+                              style: FontsAppHelper().cairoMediumFont(size: 14),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      if (order.carNum != null && order.carNum!.isNotEmpty) ...[
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.directions_car,
+                              size: 20,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'السيارة: ${order.carNum}',
+                              style: FontsAppHelper().cairoMediumFont(size: 14),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      // Row(
+                      //   children: [
+                      //     const Icon(
+                      //       Icons.domain,
+                      //       size: 20,
+                      //       color: Colors.grey,
+                      //     ),
+                      //     const SizedBox(width: 8),
+                      //     Text(
+                      //       'المكب: ${controller.getSiteName(order.rubbleSiteOid)}',
+                      //       style: FontsAppHelper().cairoMediumFont(size: 14),
+                      //     ),
+                      //   ],
+                      // ),
+                      // const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.person_outline,
+                            size: 20,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'السائق: ${order.driverName ?? order.driverOid ?? '-'}',
+                            style: FontsAppHelper().cairoMediumFont(size: 14),
+                          ),
+                        ],
+                      ),
+                      if (order.notes != null && order.notes!.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.note_outlined,
+                              size: 20,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                order.notes!,
+                                style: FontsAppHelper().cairoRegularFont(
+                                  size: 14,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                if (order.referenceNumber != null &&
-                    order.referenceNumber!.isNotEmpty) ...[
-                  Row(
-                    children: [
-                      const Icon(Icons.numbers, size: 20, color: Colors.grey),
-                      const SizedBox(width: 8),
+                      const SizedBox(height: 12),
                       Text(
-                        'الرقم المرجعي: ${order.referenceNumber}',
-                        style: FontsAppHelper().cairoMediumFont(size: 14),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                if (order.carNum != null && order.carNum!.isNotEmpty) ...[
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.directions_car,
-                        size: 20,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'السيارة: ${order.carNum}',
-                        style: FontsAppHelper().cairoMediumFont(size: 14),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                Row(
-                  children: [
-                    const Icon(Icons.domain, size: 20, color: Colors.grey),
-                    const SizedBox(width: 8),
-                    Text(
-                      'المكب: ${controller.getSiteName(order.rubbleSiteOid)}',
-                      style: FontsAppHelper().cairoMediumFont(size: 14),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.person_outline,
-                      size: 20,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'السائق: ${order.driverName ?? order.driverOid ?? '-'}',
-                      style: FontsAppHelper().cairoMediumFont(size: 14),
-                    ),
-                  ],
-                ),
-                if (order.notes != null && order.notes!.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.note_outlined,
-                        size: 20,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          order.notes!,
-                          style: FontsAppHelper().cairoRegularFont(size: 14),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        order.createdAt
+                                ?.replaceAll('T', ' ')
+                                .substring(0, 16) ??
+                            '',
+                        style: FontsAppHelper().cairoRegularFont(
+                          size: 12,
+                          color: Colors.grey,
                         ),
                       ),
                     ],
                   ),
-                ],
-                const SizedBox(height: 12),
-                Text(
-                  order.createdAt?.replaceAll('T', ' ').substring(0, 16) ?? '',
-                  style: FontsAppHelper().cairoRegularFont(
-                    size: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      );
-    });
+                );
+              },
+            );
+          }),
+        ],
+      ),
+    );
   }
 
   Widget _buildDailyStatsCard(String title, RxInt count) {

@@ -1,18 +1,19 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:get/get.dart';
-import 'package:fill_go/Modules/Main/Home/home_controller.dart';
-import 'package:fill_go/Api/BaseResponse.dart';
-import 'package:fill_go/Api/Repo/requests_repo.dart';
-import 'package:fill_go/Helpers/DialogHelper.dart';
-import 'package:fill_go/Model/TDriver.dart';
-import 'package:fill_go/Model/TSite.dart';
-import 'package:fill_go/Model/PendingOrder.dart';
-import 'package:fill_go/Model/PendingAcceptOrder.dart';
-import 'package:fill_go/Modules/Base/BaseGetxController.dart';
-import 'package:fill_go/core/database/database_helper.dart';
-import 'package:fill_go/core/services/connectivity_service.dart';
-import 'package:fill_go/core/services/sync_service.dart';
+import 'package:rubble_app/Modules/Main/Home/home_controller.dart';
+import 'package:rubble_app/Api/BaseResponse.dart';
+import 'package:rubble_app/Api/Repo/requests_repo.dart';
+import 'package:rubble_app/Helpers/DialogHelper.dart';
+import 'package:rubble_app/Model/TDriver.dart';
+import 'package:rubble_app/Model/TSite.dart';
+import 'package:rubble_app/App/Constant.dart';
+import 'package:rubble_app/Model/PendingOrder.dart';
+import 'package:rubble_app/Model/PendingAcceptOrder.dart';
+import 'package:rubble_app/Modules/Base/BaseGetxController.dart';
+import 'package:rubble_app/core/database/database_helper.dart';
+import 'package:rubble_app/core/services/connectivity_service.dart';
+import 'package:rubble_app/core/services/sync_service.dart';
 import 'package:flutter/material.dart';
 import 'package:searchfield/searchfield.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -143,6 +144,15 @@ class AddRequestController extends BaseGetxController {
     // إذا لم يكن هناك اتصال، احفظ محلياً
     else {
       try {
+        final prefs = await SharedPreferences.getInstance();
+        String? userId;
+        final userDataStr = prefs.getString(Constants.USER_DATA);
+
+        if (userDataStr != null) {
+          final userData = jsonDecode(userDataStr);
+          userId = userData['oid']?.toString();
+        }
+
         final dbHelper = DatabaseHelper.instance;
         final pendingOrder = PendingOrder(
           location: map['location'],
@@ -154,6 +164,7 @@ class AddRequestController extends BaseGetxController {
           referenceNumber: map['order_num'],
           createdAt: DateTime.now().toIso8601String(),
           syncStatus: 'pending',
+          userId: userId, // Ensure userId is passed here
         );
 
         await dbHelper.create(pendingOrder);
@@ -290,6 +301,16 @@ class AddRequestController extends BaseGetxController {
             return false;
           }
 
+          final prefs = await SharedPreferences.getInstance();
+          String? userId;
+          final userDataStr = prefs.getString(
+            Constants.USER_DATA,
+          ); //Constants.USER_DATA
+          if (userDataStr != null) {
+            final userData = jsonDecode(userDataStr);
+            userId = userData['oid']?.toString();
+          }
+
           final pendingAcceptOrder = PendingAcceptOrder(
             orderOid: orderId,
             notes: adminNotesController.text.isEmpty
@@ -298,6 +319,7 @@ class AddRequestController extends BaseGetxController {
             createdAt: DateTime.now().toIso8601String(),
             syncStatus: 'pending',
             processDate: processDate,
+            userId: userId,
           );
 
           await dbHelper.createAcceptOrder(pendingAcceptOrder);

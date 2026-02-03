@@ -7,6 +7,7 @@ import '../App/Constant.dart';
 import '../core/services/storage_service.dart';
 import '../core/services/token_service.dart';
 import '../presentation/controllers/controllers/auth_controller.dart';
+import '../presentation/controllers/routes/app_pages.dart';
 
 String token = "";
 
@@ -118,13 +119,21 @@ _dioInterceptor() => dioPackage.InterceptorsWrapper(
     if (unauthorized) {
       print('❌ تم اكتشاف استجابة غير مصرح بها ($unauthorized) (onResponse)');
 
-      if (Get.currentRoute == '/login') {
+      final currentRoute = Get.currentRoute;
+      final isLoginOrSplash =
+          currentRoute == '/login_screen' ||
+          currentRoute == '/launch_screen' ||
+          currentRoute == AppPages.login ||
+          currentRoute == AppPages.splash;
+
+      if (isLoginOrSplash) {
+        // إذا كنا في شاشة الدخول أو السبلاش، لا داعي لإظهار الرسائل أو التوجيه
         return handler.reject(
           dioPackage.DioException(
             requestOptions: response.requestOptions,
             response: response,
             type: dioPackage.DioExceptionType.badResponse,
-            error: 'Unauthorized',
+            error: 'SILENT_UNAUTHORIZED', // Error code handled silently
           ),
         );
       }
@@ -132,7 +141,7 @@ _dioInterceptor() => dioPackage.InterceptorsWrapper(
       await _clearAllAuthData();
       if (Get.isDialogOpen ?? false) Get.back();
 
-      // إعلام المستخدم
+      // إعلام المستخدم فقط إذا لم نكن في شاشة الدخول
       if (!Get.isSnackbarOpen) {
         Get.snackbar(
           'انتهاء الجلسة',
@@ -145,7 +154,7 @@ _dioInterceptor() => dioPackage.InterceptorsWrapper(
       }
 
       Future.delayed(Duration.zero, () {
-        Get.offAllNamed('/login');
+        Get.offAllNamed('/login_screen');
       });
 
       return handler.reject(
@@ -161,11 +170,28 @@ _dioInterceptor() => dioPackage.InterceptorsWrapper(
     handler.next(response);
   },
   onError: (dioPackage.DioException e, handler) async {
+    // 1. Check for Silent Error
+    if (e.error == 'SILENT_UNAUTHORIZED') {
+      return handler.next(e);
+    }
+
+    // 2. Check conditions for global handling
     if (e.response?.statusCode == 401 ||
         (e.response?.data is Map &&
             e.response?.data['message'] == "التوكن غير صالح") ||
         (e.response?.data is Map &&
             e.response?.data['message'] == "غير مصرح، يرجى تسجيل الدخول")) {
+      final currentRoute = Get.currentRoute;
+      final isLoginOrSplash =
+          currentRoute == '/login_screen' ||
+          currentRoute == '/launch_screen' ||
+          currentRoute == AppPages.login ||
+          currentRoute == AppPages.splash;
+
+      if (isLoginOrSplash) {
+        return handler.next(e);
+      }
+
       print('❌ التوكن غير صالح أو منتهي الصلاحية');
 
       // مسح جميع بيانات المصادقة
@@ -176,8 +202,8 @@ _dioInterceptor() => dioPackage.InterceptorsWrapper(
 
       // التوجيه لشاشة تسجيل الدخول
       Future.delayed(Duration.zero, () {
-        if (Get.currentRoute != '/login') {
-          Get.offAllNamed('/login');
+        if (Get.currentRoute != '/login_screen') {
+          Get.offAllNamed('/login_screen');
         }
       });
     }

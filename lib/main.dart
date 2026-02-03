@@ -1,12 +1,12 @@
 import 'dart:io';
-import 'package:fill_go/presentation/controllers/controllers/auth_controller.dart';
-import 'package:fill_go/presentation/controllers/routes/app_pages.dart';
+import 'package:rubble_app/presentation/controllers/controllers/auth_controller.dart';
+import 'package:rubble_app/presentation/controllers/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:fill_go/App/app.dart';
+import 'package:rubble_app/App/app.dart';
 import 'App/binding.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'Helpers/assets_color.dart';

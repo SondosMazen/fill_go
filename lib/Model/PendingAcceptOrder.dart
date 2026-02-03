@@ -1,4 +1,4 @@
-import 'package:fill_go/Model/BaseModel.dart';
+import 'package:rubble_app/Model/BaseModel.dart';
 
 /// (Pending Accept Order) يُستخدم لحفظ عمليات قبول الطلبات محلياً عند عدم توفر الإنترنت
 class PendingAcceptOrder extends BaseModel {
@@ -9,6 +9,7 @@ class PendingAcceptOrder extends BaseModel {
   String? syncStatus; // 'pending', 'syncing', 'failed', 'success'
   String? errorMessage; // رسالة الخطأ في حالة فشل المزامنة
   String? processDate; // تاريخ ووقت المعالجة
+  String? userId; // معرف المستخدم الذي قام بالقبول
 
   PendingAcceptOrder({
     this.id,
@@ -18,6 +19,7 @@ class PendingAcceptOrder extends BaseModel {
     this.syncStatus = 'pending',
     this.errorMessage,
     this.processDate,
+    this.userId,
   });
 
   /// تحويل من Map (من قاعدة البيانات)
@@ -30,6 +32,7 @@ class PendingAcceptOrder extends BaseModel {
       syncStatus: map['sync_status'] as String? ?? 'pending',
       errorMessage: map['error_message'] as String?,
       processDate: map['process_date'] as String?,
+      userId: map['user_id'] as String?,
     );
   }
 
@@ -43,6 +46,7 @@ class PendingAcceptOrder extends BaseModel {
       'sync_status': syncStatus,
       'error_message': errorMessage,
       'process_date': processDate,
+      'user_id': userId,
     };
   }
 
@@ -64,6 +68,7 @@ class PendingAcceptOrder extends BaseModel {
     String? syncStatus,
     String? errorMessage,
     String? processDate,
+    String? userId,
   }) {
     return PendingAcceptOrder(
       id: id ?? this.id,
@@ -73,6 +78,7 @@ class PendingAcceptOrder extends BaseModel {
       syncStatus: syncStatus ?? this.syncStatus,
       errorMessage: errorMessage ?? this.errorMessage,
       processDate: processDate ?? this.processDate,
+      userId: userId ?? this.userId,
     );
   }
 
@@ -81,6 +87,6 @@ class PendingAcceptOrder extends BaseModel {
 
   @override
   String toString() {
-    return 'PendingAcceptOrder(id: $id, orderOid: $orderOid, syncStatus: $syncStatus, processDate: $processDate)';
+    return 'PendingAcceptOrder(id: $id, orderOid: $orderOid, syncStatus: $syncStatus, processDate: $processDate, userId: $userId)';
   }
 }

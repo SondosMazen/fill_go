@@ -3,16 +3,17 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fill_go/Modules/Base/BaseGetxController.dart';
-import 'package:fill_go/Model/TDriver.dart';
-import 'package:fill_go/Model/PendingOrder.dart';
-import 'package:fill_go/Api/Repo/requests_repo.dart';
-import 'package:fill_go/Api/BaseResponse.dart';
-import 'package:fill_go/Helpers/DialogHelper.dart';
-import 'package:fill_go/core/services/connectivity_service.dart';
-import 'package:fill_go/core/services/sync_service.dart';
-import 'package:fill_go/core/database/database_helper.dart';
+import 'package:rubble_app/Modules/Base/BaseGetxController.dart';
+import 'package:rubble_app/Model/TDriver.dart';
+import 'package:rubble_app/Model/PendingOrder.dart';
+import 'package:rubble_app/Api/Repo/requests_repo.dart';
+import 'package:rubble_app/Api/BaseResponse.dart';
+import 'package:rubble_app/Helpers/DialogHelper.dart';
+import 'package:rubble_app/core/services/connectivity_service.dart';
+import 'package:rubble_app/core/services/sync_service.dart';
+import 'package:rubble_app/core/database/database_helper.dart';
 import 'package:searchfield/searchfield.dart';
+import 'package:rubble_app/App/Constant.dart';
 
 class AddOfflineRequestController extends BaseGetxController {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -110,6 +111,16 @@ class AddOfflineRequestController extends BaseGetxController {
     DialogHelper.showLoading();
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      String? userId;
+      final userDataStr = prefs.getString(
+        Constants.USER_DATA,
+      ); // Constants.USER_DATA
+      if (userDataStr != null) {
+        final userData = jsonDecode(userDataStr);
+        userId = userData['oid']?.toString();
+      }
+
       final dbHelper = DatabaseHelper.instance;
       final pendingOrder = PendingOrder(
         driverOid: selectedDriverValue,
@@ -118,14 +129,26 @@ class AddOfflineRequestController extends BaseGetxController {
         notes: notesController.text,
         createdAt: DateTime.now().toIso8601String(),
         syncStatus: 'pending',
+        userId: userId,
       );
 
       await dbHelper.create(pendingOrder);
 
-      // تحديث عداد الطلبات المعلقة
+      // تحديث عداد الطلبات المعلقة في SyncService
       if (Get.isRegistered<SyncService>()) {
         final syncService = Get.find<SyncService>();
         await syncService.updatePendingCount();
+      }
+
+      // زيادة العداد اليومي للطلبات المضافة (للعرض فقط)
+      if (userId != null) {
+        final now = DateTime.now();
+        final todayStr =
+            "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+        final key = 'offline_added_total_${userId}_$todayStr';
+        final currentTotal = prefs.getInt(key) ?? 0;
+        await prefs.setInt(key, currentTotal + 1);
+        log('✅ Incremented Offline Total for $todayStr to ${currentTotal + 1}');
       }
 
       DialogHelper.hideLoading();

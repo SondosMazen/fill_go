@@ -1,8 +1,11 @@
 import 'dart:async';
-import 'package:fill_go/Api/Repo/requests_repo.dart';
-import 'package:fill_go/core/database/database_helper.dart';
-import 'package:fill_go/core/services/connectivity_service.dart';
+import 'package:rubble_app/Api/Repo/requests_repo.dart';
+import 'package:rubble_app/core/database/database_helper.dart';
+import 'package:rubble_app/core/services/connectivity_service.dart';
 import 'package:get/get.dart';
+import 'dart:convert';
+import 'package:rubble_app/App/Constant.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 ///  (المزامنة التلقائية) تقوم برفع الطلبات المعلقة عند استعادة الاتصال
 class SyncService extends GetxService {
@@ -37,13 +40,85 @@ class SyncService extends GetxService {
 
   /// تحديث عداد الطلبات المعلقة
   Future<void> updatePendingCount() async {
-    final newOrdersCount = await _dbHelper.getCount();
-    final acceptOrdersCount = await _dbHelper.getAcceptOrdersCount();
-    pendingCount.value = newOrdersCount + acceptOrdersCount;
+    final prefs = await SharedPreferences.getInstance();
+    final userDataStr = prefs.getString(Constants.USER_DATA);
+    String? userId;
+    // Default to '1' (Inspector) if not set
+
+    if (userDataStr != null) {
+      try {
+        final userData = jsonDecode(userDataStr);
+        userId = userData['oid']?.toString();
+      } catch (e) {
+        // ignore error
+      }
+    }
+
+    final pendingOrders = await _dbHelper.readAll();
+    final acceptOrders = await _dbHelper.readAllAcceptOrders();
+
+    int count = 0;
+
+    // Filter Logic: Strict separation for ALL users
+    // Filter Logic: Strict separation based on user permissions
+    if (userId != null) {
+      String? userType = prefs.getString(Constants.USER_TYPE);
+
+      // Fallback: Check inside user data JSON if main pref is missing
+      if (userType == null && userDataStr != null) {
+        try {
+          final userData = jsonDecode(userDataStr);
+          userType = userData['user_type']?.toString();
+        } catch (_) {}
+      }
+
+      print('🔄 UpdatePendingCount: UserId=$userId, UserType=$userType');
+
+      // UserType 1 (Inspector/Monitor): Only count pending Accepts (offline accepted orders)
+      // STRICTLY exclude 'pendingOrders' (Added Offline Requests) from the count for this user.
+      if (userType == '1' ||
+          userType.toString().toLowerCase().contains('inspector')) {
+        final acceptedCount = acceptOrders
+            .where((o) => o.userId == userId)
+            .length;
+        print(
+          '👮 Inspector (Type 1): Counting only accepted orders ($acceptedCount)',
+        );
+        count = acceptedCount;
+      } else {
+        // UserType 2 (Contractor) or others: Count both
+        final addedCount = pendingOrders
+            .where((o) => o.userId == userId)
+            .length;
+        final acceptedCount = acceptOrders
+            .where((o) => o.userId == userId)
+            .length;
+        print(
+          '👷 Contractor/Other: Counting added ($addedCount) + accepted ($acceptedCount)',
+        );
+        count = addedCount + acceptedCount;
+      }
+    }
+
+    pendingCount.value = count;
+  }
+
+  /// التحقق مما إذ كان المستخدم في شاشة الدخول
+  bool get _isLoginOrSplash {
+    final route = Get.currentRoute;
+    return route == '/login_screen' ||
+        route == '/splash_screen' ||
+        route == '/launch_screen' ||
+        route == '/';
   }
 
   /// مزامنة جميع الطلبات المعلقة (الطلبات الجديدة + عمليات القبول)
   Future<void> syncPendingOrders() async {
+    if (_isLoginOrSplash) {
+      print('🔕 Sync skipped (User is on Login/Splash screen)');
+      return;
+    }
+
     if (isSyncing.value) {
       print('⏳ Sync already in progress...');
       return;
@@ -116,6 +191,14 @@ class SyncService extends GetxService {
             print('❌ Order ${order.id} sync failed: ${response.message}');
           }
         } catch (e) {
+          final errorMsg = e.toString();
+          if (errorMsg.contains('SILENT_UNAUTHORIZED') ||
+              errorMsg.contains('غير مصرح') ||
+              errorMsg.contains('Unauthorized')) {
+            print('⏹️ Auth failed during sync (NewOrders), stopping...');
+            return;
+          }
+
           // خطأ في الاتصال
           await _dbHelper.update(
             order.copyWith(syncStatus: 'failed', errorMessage: e.toString()),
@@ -128,23 +211,25 @@ class SyncService extends GetxService {
       // تحديث العداد
       await updatePendingCount();
 
-      // إظهار نتيجة المزامنة
-      if (successCount > 0) {
-        Get.snackbar(
-          'تمت المزامنة',
-          'تم رفع $successCount طلب بنجاح',
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 3),
-        );
-      }
+      // إظهار نتيجة المزامنة (فقط إذا لم نكن في شاشة الدخول)
+      if (!_isLoginOrSplash) {
+        if (successCount > 0) {
+          Get.snackbar(
+            'تمت المزامنة',
+            'تم رفع $successCount طلب بنجاح',
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 3),
+          );
+        }
 
-      if (failCount > 0) {
-        Get.snackbar(
-          'فشلت بعض العمليات',
-          'فشل رفع $failCount طلب. سيتم المحاولة لاحقاً',
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 3),
-        );
+        if (failCount > 0) {
+          Get.snackbar(
+            'فشلت بعض العمليات',
+            'فشل رفع $failCount طلب. سيتم المحاولة لاحقاً',
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 3),
+          );
+        }
       }
     } catch (e) {
       print('❌ Error in _syncNewOrders: $e');
@@ -167,7 +252,6 @@ class SyncService extends GetxService {
       );
 
       int successCount = 0;
-      int failCount = 0;
 
       for (var acceptOrder in pendingAcceptOrders) {
         // تحديث الحالة إلى "syncing"
@@ -194,12 +278,19 @@ class SyncService extends GetxService {
                 errorMessage: response.message ?? 'Unknown error',
               ),
             );
-            failCount++;
             print(
               '❌ Accept order ${acceptOrder.id} sync failed: ${response.message}',
             );
           }
         } catch (e) {
+          final errorMsg = e.toString();
+          if (errorMsg.contains('SILENT_UNAUTHORIZED') ||
+              errorMsg.contains('غير مصرح') ||
+              errorMsg.contains('Unauthorized')) {
+            print('⏹️ Auth failed during sync (AcceptOrders), stopping...');
+            return;
+          }
+
           // خطأ في الاتصال
           await _dbHelper.updateAcceptOrder(
             acceptOrder.copyWith(
@@ -207,28 +298,20 @@ class SyncService extends GetxService {
               errorMessage: e.toString(),
             ),
           );
-          failCount++;
           print('❌ Accept order ${acceptOrder.id} sync error: $e');
         }
       }
 
-      // إظهار نتيجة المزامنة
-      if (successCount > 0) {
-        Get.snackbar(
-          'تمت المزامنة',
-          'تم قبول $successCount طلب بنجاح',
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 3),
-        );
-      }
-
-      if (failCount > 0) {
-        Get.snackbar(
-          'فشلت بعض العمليات',
-          'فشل قبول $failCount طلب. سيتم المحاولة لاحقاً',
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 3),
-        );
+      // إظهار نتيجة المزامنة (فقط إذا لم نكن في شاشة الدخول)
+      if (!_isLoginOrSplash) {
+        if (successCount > 0) {
+          Get.snackbar(
+            'تمت المزامنة',
+            'تم قبول $successCount طلب بنجاح',
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 3),
+          );
+        }
       }
     } catch (e) {
       print('❌ Error in _syncAcceptOrders: $e');

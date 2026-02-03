@@ -14,6 +14,11 @@ class DioExceptions implements Exception {
     DioException DioException, {
     bool isPopupLoading = false,
   }) {
+    if (DioException.error == 'SILENT_UNAUTHORIZED') {
+      message = 'SILENT_UNAUTHORIZED';
+      return;
+    }
+
     switch (DioException.type) {
       case DioExceptionType.cancel:
         message = "تم إلغاء العملة";
@@ -31,7 +36,15 @@ class DioExceptions implements Exception {
         );
         break;
       case DioExceptionType.badResponse:
-        message = "خطأ في الإستجابة ${DioException.response?.data['message']}";
+        dynamic data = DioException.response?.data;
+        if (data != null && data is Map && data['message'] != null) {
+          message = "خطأ في الإستجابة ${data['message']}";
+        } else {
+          message = _handleError(
+            DioException.response?.statusCode,
+            DioException.response?.data,
+          );
+        }
         break;
       case DioExceptionType.sendTimeout:
         message = "لا يوجد رد من الخادم ";
@@ -43,14 +56,25 @@ class DioExceptions implements Exception {
         message = 'مشكلة غير محددة ${DioException.type}';
         break;
     }
-    if (isPopupLoading && Get.isDialogOpen!) Get.back();
-    SnackBarHelper.show(msg: message);
+    if (isPopupLoading && (Get.isDialogOpen ?? false)) Get.back();
+    // SnackBarHelper.show(msg: message); // Removed to prevent double notifications
   }
 
   String _handleError(int? statusCode, dynamic error) {
+    if (statusCode == null) return 'حدث خطأ غير معروف';
+
+    // محاولة استخراج الرسالة إذا كانت موجودة
+    String? serverMsg;
+    if (error is Map && error['message'] != null) {
+      serverMsg = error['message'];
+    } else if (error is String) {
+      serverMsg = error;
+    }
+
     switch (statusCode) {
+      case 302: // Treat 302 as Unauthorized
       case 400:
-        return 'Bad request';
+        return serverMsg ?? 'Bad request';
       case 401:
         // مسح بيانات الجلسة عند انتهاء الصلاحية (401)
         TokenService.to.clearToken().then((_) async {
@@ -59,21 +83,19 @@ class DioExceptions implements Exception {
           await shared.setString(Constants.USER_DATA, "");
           Get.offAll(() => const LoginScreen());
         });
-        return 'غير مصرح بك يرجى تسجيل الدخول';
+        return serverMsg ?? 'غير مصرح بك يرجى تسجيل الدخول';
       case 403:
-        return 'Forbidden';
+        return serverMsg ?? 'Forbidden';
       case 404:
-        return error['message'];
+        return serverMsg ?? 'الصفحة غير موجودة';
       case 429:
-        return 'الرجاء المحاولة مره اخرى';
+        return serverMsg ?? 'الرجاء المحاولة مره اخرى';
       case 500:
-        {
-          return error['message'];
-        }
+        return serverMsg ?? 'يوجد مشكلة من السيرفر (500)';
       case 502:
-        return 'Bad gateway';
+        return serverMsg ?? 'Bad gateway';
       default:
-        return 'يوجد مشكلة من السيرفر';
+        return serverMsg ?? 'يوجد مشكلة من السيرفر ($statusCode)';
     }
   }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:fill_go/App/app.dart';
-import 'package:fill_go/Helpers/assets_color.dart';
-import 'package:fill_go/Utils/utils.dart';
+import 'package:rubble_app/App/app.dart';
+import 'package:rubble_app/Helpers/assets_color.dart';
+import 'package:rubble_app/Utils/utils.dart';
 
 class SnackBarHelper {
   static void show({String msg = "قيد التطوير", Color? backgroundColor}) {

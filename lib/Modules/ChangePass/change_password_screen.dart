@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:fill_go/Helpers/assets_color.dart';
-import 'package:fill_go/Helpers/assets_helper.dart';
-import 'package:fill_go/Utils/utils.dart';
-import 'package:fill_go/Widgets/custom_widgets.dart';
+import 'package:rubble_app/Helpers/assets_color.dart';
+import 'package:rubble_app/Helpers/assets_helper.dart';
+import 'package:rubble_app/Utils/utils.dart';
+import 'package:rubble_app/Widgets/custom_widgets.dart';
 
 class ChangePassword extends StatelessWidget {
   const ChangePassword({

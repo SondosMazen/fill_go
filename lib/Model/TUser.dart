@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:fill_go/App/Constant.dart';
-import 'package:fill_go/App/app.dart';
-import 'package:fill_go/Model/BaseModel.dart';
+import 'package:rubble_app/App/Constant.dart';
+import 'package:rubble_app/App/app.dart';
+import 'package:rubble_app/Model/BaseModel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 TUser tUserFromJson(String str) => TUser.fromJson(json.decode(str));
@@ -37,16 +37,12 @@ class TUser extends BaseModel {
       isActive: json['is_active']?.toString() == '1',
       userType: () {
         final type = json['user_type']?.toString();
-        switch (type) {
-          // المفتش
-          case '1':
-            return UserType.inspector;
-          // المراقب
-          case '2':
-            return UserType.contractor;
-          default:
-            return UserType.contractor; // قيمة افتراضية
+        if (type == '1' || type.toString().contains('inspector')) {
+          return UserType.inspector;
+        } else if (type == '2' || type.toString().contains('contractor')) {
+          return UserType.contractor;
         }
+        return UserType.contractor; // Default
       }(),
       token: json['token'],
     );
@@ -56,7 +52,8 @@ class TUser extends BaseModel {
     'name': name,
     'user_name': userName,
     'is_active': isActive,
-    'user_type': userType,
+    // Serialize enum to '1' or '2' matching the API/internal logic to ensure consistency
+    'user_type': userType == UserType.inspector ? '1' : '2',
     'token': token,
     'updated_at': updatedAt,
     'oid': oid,

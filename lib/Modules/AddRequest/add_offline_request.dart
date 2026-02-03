@@ -1,7 +1,8 @@
-import 'package:fill_go/Helpers/assets_color.dart';
-import 'package:fill_go/Helpers/assets_helper.dart';
-import 'package:fill_go/Modules/AddRequest/add_offline_request_controller.dart';
-import 'package:fill_go/Widgets/custom_widgets.dart';
+import 'package:flutter/services.dart';
+import 'package:rubble_app/Helpers/assets_color.dart';
+import 'package:rubble_app/Helpers/assets_helper.dart';
+import 'package:rubble_app/Modules/AddRequest/add_offline_request_controller.dart';
+import 'package:rubble_app/Widgets/custom_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -60,9 +61,24 @@ class AddOfflineRequest extends StatelessWidget {
                           MyTextField(
                             filled: true,
                             fillColor: const Color(0xFFFAFAFA),
-                            hint: 'أدخل الرقم المرجعي',
+                            hint: 'أدخل الرقم المرجعي (أرقام إنجليزية فقط)',
                             myController: controller.referenceNumberController,
                             iconData: Icons.numbers,
+                            textInputType: TextInputType.number,
+                            listInputFormatter: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'[0-9]'),
+                              ),
+                            ],
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'الرقم المرجعي مطلوب';
+                              }
+                              if (RegExp(r'[٠-٩]').hasMatch(value)) {
+                                return 'يجب استخدام الأرقام الإنجليزية فقط';
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 20),
                           _buildLabel('أسم السائق'),

@@ -1,11 +1,12 @@
 import 'dart:convert';
-import 'package:fill_go/Model/PendingAcceptOrder.dart';
-import 'package:fill_go/Model/TDriver.dart';
-import 'package:fill_go/Model/TSite.dart';
-import 'package:fill_go/core/database/database_helper.dart';
-import 'package:fill_go/core/services/sync_service.dart';
+import 'package:rubble_app/Model/PendingAcceptOrder.dart';
+import 'package:rubble_app/Model/TDriver.dart';
+import 'package:rubble_app/Model/TSite.dart';
+import 'package:rubble_app/core/database/database_helper.dart';
+import 'package:rubble_app/core/services/sync_service.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rubble_app/App/Constant.dart';
 
 /// Controller لشاشة الطلبات المقبولة محلياً
 class PendingAcceptOrdersController extends GetxController {
@@ -98,8 +99,25 @@ class PendingAcceptOrdersController extends GetxController {
   Future<void> loadPendingAcceptOrders() async {
     isLoading.value = true;
     try {
+      final prefs = await SharedPreferences.getInstance();
+      String? currentUserId;
+      final userDataStr = prefs.getString(
+        Constants.USER_DATA,
+      ); //Constants.USER_DATA
+      if (userDataStr != null) {
+        final userData = jsonDecode(userDataStr);
+        currentUserId = userData['oid']?.toString();
+      }
+
       final orders = await _dbHelper.readAllAcceptOrders();
-      pendingAcceptOrders.value = orders;
+
+      if (currentUserId != null) {
+        pendingAcceptOrders.value = orders
+            .where((o) => o.userId == currentUserId)
+            .toList();
+      } else {
+        pendingAcceptOrders.value = [];
+      }
     } catch (e) {
       print('Error loading pending accept orders: $e');
     } finally {

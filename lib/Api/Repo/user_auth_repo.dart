@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:fill_go/Api/Controllers/user_auth_controller.dart';
-import 'package:fill_go/Model/TUser.dart';
+import 'package:rubble_app/Api/Controllers/user_auth_controller.dart';
+import 'package:rubble_app/Model/TUser.dart';
 import '../BaseResponse.dart';
 import '../DioExceptions.dart';
 

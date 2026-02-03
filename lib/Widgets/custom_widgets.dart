@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:fill_go/Helpers/assets_color.dart';
-import 'package:fill_go/Helpers/assets_helper.dart';
-import 'package:fill_go/Utils/utils.dart';
-import 'package:fill_go/Utils/validator.dart';
+import 'package:rubble_app/Helpers/assets_color.dart';
+import 'package:rubble_app/Helpers/assets_helper.dart';
+import 'package:rubble_app/Utils/utils.dart';
+import 'package:rubble_app/Utils/validator.dart';
 
 class MyCustomButton extends StatelessWidget {
   late String text;

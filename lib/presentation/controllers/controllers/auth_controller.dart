@@ -136,7 +136,7 @@ class AuthController extends GetxController {
       } else {
         // الانتقال لشاشة تسجيل الدخول
         print('🔐 الانتقال لشاشة تسجيل الدخول');
-        Get.offAllNamed('/login');
+        Get.offAllNamed('/login_screen');
       }
     });
   }
@@ -160,13 +160,13 @@ class AuthController extends GetxController {
       );
 
       // التوجيه لشاشة تسجيل الدخول
-      Get.offAllNamed('/login');
+      Get.offAllNamed('/login_screen');
 
       print('✅ تم تسجيل الخروج بنجاح');
     } catch (e) {
       print('❌ خطأ في تسجيل الخروج: $e');
       await _clearAuthState();
-      Get.offAllNamed('/login');
+      Get.offAllNamed('/login_screen');
     } finally {
       _isLoading.value = false;
     }
@@ -229,14 +229,14 @@ class AuthController extends GetxController {
   /// الحصول على الصفحة الرئيسية حسب نوع المستخدم
   String getHomeRoute() {
     if (!isLoggedIn || currentUser == null) {
-      return '/login';
+      return '/login_screen';
     }
 
     switch (currentUser!.userType) {
       case UserType.inspector:
-        return '/inspector-dashboard';
+        return '/home_screen';
       case UserType.contractor:
-        return '/inspector-dashboard';
+        return '/home_screen';
     }
   }
 

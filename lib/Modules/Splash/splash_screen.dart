@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:fill_go/App/Constant.dart';
-import 'package:fill_go/App/app.dart';
-import 'package:fill_go/presentation/controllers/routes/app_pages.dart';
+import 'package:rubble_app/App/Constant.dart';
+import 'package:rubble_app/App/app.dart';
+import 'package:rubble_app/presentation/controllers/routes/app_pages.dart';
 import '../../Helpers/assets_helper.dart';
 
 class LaunchScreen extends StatefulWidget {

@@ -1,10 +1,10 @@
-import 'package:fill_go/Modules/PendingAcceptOrders/pending_accept_orders_controller.dart';
-import 'package:fill_go/core/services/sync_service.dart';
+import 'package:rubble_app/Modules/PendingAcceptOrders/pending_accept_orders_controller.dart';
+import 'package:rubble_app/core/services/sync_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:fill_go/Helpers/assets_color.dart';
-import 'package:fill_go/Helpers/font_helper.dart';
-import 'package:fill_go/Modules/Main/Home/home_controller.dart';
+import 'package:rubble_app/Helpers/assets_color.dart';
+import 'package:rubble_app/Helpers/font_helper.dart';
+import 'package:rubble_app/Modules/Main/Home/home_controller.dart';
 
 /// شاشة الطلبات المقبولة محلياً (Locally Accepted Orders)
 class PendingAcceptOrdersScreen extends StatelessWidget {

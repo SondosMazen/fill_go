@@ -1,25 +1,25 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'package:fill_go/Api/Repo/requests_repo.dart';
-import 'package:fill_go/App/Constant.dart';
-import 'package:fill_go/App/app.dart';
-import 'package:fill_go/Helpers/assets_color.dart';
-import 'package:fill_go/Helpers/font_helper.dart';
-import 'package:fill_go/Helpers/snackbar_helper.dart';
-import 'package:fill_go/Model/TOrder.dart';
-import 'package:fill_go/Model/PendingAcceptOrder.dart';
-import 'package:fill_go/Model/PendingOrder.dart';
-import 'package:fill_go/Model/TSite.dart';
-import 'package:fill_go/core/database/database_helper.dart';
-import 'package:fill_go/core/services/connectivity_service.dart';
-import 'package:fill_go/core/services/sync_service.dart';
+import 'package:rubble_app/Api/Repo/requests_repo.dart';
+import 'package:rubble_app/App/Constant.dart';
+import 'package:rubble_app/App/app.dart';
+import 'package:rubble_app/Helpers/assets_color.dart';
+import 'package:rubble_app/Helpers/font_helper.dart';
+import 'package:rubble_app/Helpers/snackbar_helper.dart';
+import 'package:rubble_app/Model/TOrder.dart';
+import 'package:rubble_app/Model/PendingAcceptOrder.dart';
+import 'package:rubble_app/Model/PendingOrder.dart';
+import 'package:rubble_app/Model/TSite.dart';
+import 'package:rubble_app/core/database/database_helper.dart';
+import 'package:rubble_app/core/services/connectivity_service.dart';
+import 'package:rubble_app/core/services/sync_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_select_items/flutter_multi_select_items.dart';
 import 'package:get/get.dart';
-import 'package:fill_go/Modules/Base/BaseGetxController.dart';
+import 'package:rubble_app/Modules/Base/BaseGetxController.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../Api/BaseResponse.dart';
-import 'package:fill_go/Modules/Main/Home/matching_offline_requests_screen.dart';
+import 'package:rubble_app/Modules/Main/Home/matching_offline_requests_screen.dart';
 import '../../../presentation/controllers/controllers/auth_controller.dart';
 
 class HomeController extends BaseGetxController {
@@ -34,6 +34,8 @@ class HomeController extends BaseGetxController {
   // قائمة طلبات الاوفلاين (PendingOrder)
   RxList<PendingOrder> offlineRequests = <PendingOrder>[].obs;
   RxList<PendingOrder> filteredOfflineRequests = <PendingOrder>[].obs;
+  // العداد الكلي للطلبات المضافة اليوم (تراكمي)
+  RxInt totalOfflineAddedToday = 0.obs;
   Map<String, String> sitesMap = {};
 
   List<TOrder> pendingOrders = [];
@@ -98,10 +100,25 @@ class HomeController extends BaseGetxController {
     try {
       final dbHelper = DatabaseHelper.instance;
       final acceptedOrders = await dbHelper.readAllAcceptOrders();
-      localAcceptedOrderIds.value = acceptedOrders
-          .where((o) => o.orderOid != null)
-          .map((o) => o.orderOid!)
-          .toList();
+
+      // Filter by User ID to prevent showing other users' accepted orders
+      final prefs = await SharedPreferences.getInstance();
+      String? currentUserId;
+      final userDataStr = prefs.getString(Constants.USER_DATA);
+      if (userDataStr != null) {
+        final userData = jsonDecode(userDataStr);
+        currentUserId = userData['oid']?.toString();
+      }
+
+      if (currentUserId != null) {
+        localAcceptedOrderIds.value = acceptedOrders
+            .where((o) => o.orderOid != null && o.userId == currentUserId)
+            .map((o) => o.orderOid!)
+            .toList();
+      } else {
+        localAcceptedOrderIds.value = [];
+      }
+
       calculateDailyStats();
     } catch (e) {
       log('Error loading local accepted order IDs: $e');
@@ -114,19 +131,77 @@ class HomeController extends BaseGetxController {
       final dbHelper = DatabaseHelper.instance;
       final requests = await dbHelper.readAll();
 
+      // Filter by User ID to prevent showing other users' requests
+      final prefs = await SharedPreferences.getInstance();
+      String? currentUserId;
+      final userDataStr = prefs.getString(Constants.USER_DATA);
+      if (userDataStr != null) {
+        final userData = jsonDecode(userDataStr);
+        currentUserId = userData['oid']?.toString();
+      }
+
+      List<PendingOrder> userRequests = [];
+      if (currentUserId != null) {
+        userRequests = requests
+            .where((r) => r.userId == currentUserId)
+            .toList();
+      } else {
+        // Fallback: If no user ID found, show nothing to be safe,
+        // or show all if that was the intended legacy behavior (but here we want restriction)
+        userRequests = [];
+      }
+
       // Sort: Newest first
-      requests.sort((a, b) {
+      userRequests.sort((a, b) {
         if (a.createdAt == null || b.createdAt == null) return 0;
         return DateTime.parse(
           b.createdAt!,
         ).compareTo(DateTime.parse(a.createdAt!));
       });
 
-      offlineRequests.value = requests;
-      filteredOfflineRequests.value = requests; // Initialize filtered list
+      offlineRequests.value = userRequests;
+      filteredOfflineRequests.value = userRequests; // Initialize filtered list
       calculateDailyStats();
     } catch (e) {
       log('Error loading offline requests: $e');
+    } finally {
+      loadTotalOfflineAddedToday();
+    }
+  }
+
+  /// تحميل العدد الكلي للطلبات المضافة اليوم (التراكمي)
+  Future<void> loadTotalOfflineAddedToday() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? currentUserId;
+      final userDataStr = prefs.getString(Constants.USER_DATA);
+
+      if (userDataStr != null) {
+        final userData = jsonDecode(userDataStr);
+        currentUserId = userData['oid']?.toString();
+      }
+
+      if (currentUserId != null) {
+        final now = DateTime.now();
+        final todayStr =
+            "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+        final key = 'offline_added_total_${currentUserId}_$todayStr';
+        final total = prefs.getInt(key) ?? 0;
+
+        // في حال كان العداد صفر ولكن هناك طلبات في القائمة (حالة تثبيت جديد أو مسح بيانات)
+        // يمكننا استخدام طول القائمة كحد أدنى
+        if (total < offlineRequests.length) {
+          totalOfflineAddedToday.value = offlineRequests.length;
+          // تحديث الكاش ليتوافق
+          await prefs.setInt(key, offlineRequests.length);
+        } else {
+          totalOfflineAddedToday.value = total;
+        }
+      } else {
+        totalOfflineAddedToday.value = 0;
+      }
+    } catch (e) {
+      log('Error loading total offline added today: $e');
     }
   }
 
@@ -173,10 +248,8 @@ class HomeController extends BaseGetxController {
     // 1. Server Orders
     if (tOrder != null) {
       for (var order in tOrder!) {
-        // Pending Added Today
-        if (order.processUser == null &&
-            order.entryDate != null &&
-            order.entryDate!.startsWith(todayStr)) {
+        // Added Today (Pending or Accepted)
+        if (order.entryDate != null && order.entryDate!.startsWith(todayStr)) {
           added++;
         }
         // Accepted Today
@@ -189,20 +262,34 @@ class HomeController extends BaseGetxController {
     }
 
     // 2. Local Offline Requests (Added Today)
+    // Disabled as per request: Offline requests count should not be added to the daily "Added Today" stats
+    // which is reserved for orders added by contractors (usertype=2).
+    /*
     for (var req in offlineRequests) {
-      // created_at usually is ISO8601 string or similar. T checks startWidth.
-      // ISO: 2026-01-27T11:20:50...
-      // todayStr: 2026-01-27
       if (req.createdAt != null && req.createdAt!.startsWith(todayStr)) {
         added++;
       }
     }
+    */
 
     // 3. Local Accepted Orders (Accepted Today)
     int localAcceptedToday = 0;
     try {
       final dbHelper = DatabaseHelper.instance;
-      final localAccepted = await dbHelper.readAllAcceptOrders();
+      final allLocalAccepted = await dbHelper.readAllAcceptOrders();
+
+      // Filter by User ID
+      final prefs = await SharedPreferences.getInstance();
+      String? currentUserId;
+      final userDataStr = prefs.getString(Constants.USER_DATA);
+      if (userDataStr != null) {
+        final userData = jsonDecode(userDataStr);
+        currentUserId = userData['oid']?.toString();
+      }
+
+      final localAccepted = currentUserId != null
+          ? allLocalAccepted.where((o) => o.userId == currentUserId).toList()
+          : <PendingAcceptOrder>[];
       for (var order in localAccepted) {
         if (order.processDate != null &&
             order.processDate!.startsWith(todayStr)) {
@@ -574,6 +661,7 @@ class HomeController extends BaseGetxController {
             final syncService = Get.find<SyncService>();
             await syncService.updatePendingCount();
             log('تم حذف طلب الاوفلاين #$offlineRequestId بعد القبول');
+            await loadOfflineRequests();
           } catch (e) {
             log('خطأ في حذف طلب الاوفلاين: $e');
           }
@@ -592,6 +680,15 @@ class HomeController extends BaseGetxController {
     // إذا لم يكن هناك اتصال، احفظ محلياً
     else {
       try {
+        // الحصول على المعرف الحالي
+        final prefs = await SharedPreferences.getInstance();
+        String? currentUserId;
+        final userDataStr = prefs.getString(Constants.USER_DATA);
+        if (userDataStr != null) {
+          final userData = jsonDecode(userDataStr);
+          currentUserId = userData['oid']?.toString();
+        }
+
         final dbHelper = DatabaseHelper.instance;
         final pendingAcceptOrder = PendingAcceptOrder(
           orderOid: orderNumber,
@@ -599,6 +696,7 @@ class HomeController extends BaseGetxController {
           createdAt: DateTime.now().toIso8601String(),
           syncStatus: 'pending',
           processDate: processDate,
+          userId: currentUserId,
         );
 
         await dbHelper.createAcceptOrder(pendingAcceptOrder);
@@ -612,6 +710,11 @@ class HomeController extends BaseGetxController {
         // تحديث عداد الطلبات المعلقة
         final syncService = Get.find<SyncService>();
         await syncService.updatePendingCount();
+
+        // تحديث القوائم فوراً
+        await loadOfflineRequests();
+        await loadLocalAcceptedOrderIds();
+        update();
 
         // إظهار رسالة للمستخدم
         Get.snackbar(
