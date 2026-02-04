@@ -87,7 +87,7 @@ class HomeController extends BaseGetxController {
           if (!syncing) {
             loadLocalAcceptedOrderIds();
             loadOfflineRequests(); // تحديث القائمة بعد انتهاء المزامنة
-            getOrders();
+            refreshData(); // تحديث البيانات بما في ذلك الإحصائيات
           }
         });
         // تحديث القائمة عند تغير عداد الطلبات المعلقة
@@ -95,6 +95,17 @@ class HomeController extends BaseGetxController {
       }
     } catch (e) {
       log('SyncService listeners error: $e');
+    }
+  }
+
+  /// تحديث كافة البيانات والإحصائيات
+  Future<void> refreshData() async {
+    loadingMessage.value = '';
+    setLoading(true);
+    try {
+      await Future.wait([getOrders(), calculateDailyStats()]);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -390,27 +401,13 @@ class HomeController extends BaseGetxController {
           ).compareTo(DateTime.parse(a.entryDate ?? ''));
         });
 
-        calculateDailyStats();
+        // calculateDailyStats() call moved to onReady to be independent
 
         // Split orders
-        final now = DateTime.now();
-        final todayStr =
-            "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
 
-        pendingOrders = tOrder!
-            .where(
-              (o) =>
-                  o.processUser == null &&
-                  (o.entryDate != null && o.entryDate!.startsWith(todayStr)),
-            )
-            .toList();
+        pendingOrders = tOrder!.where((o) => o.processUserOid == null).toList();
         acceptedOrders = tOrder!
-            .where(
-              (o) =>
-                  o.processUser != null &&
-                  (o.processDate != null &&
-                      o.processDate!.startsWith(todayStr)),
-            )
+            .where((o) => o.processUserOid != null)
             .toList();
 
         // Sort Pending (Added) by entryDate descending
@@ -530,25 +527,25 @@ class HomeController extends BaseGetxController {
         tOrder = ordersList.map((json) => TOrder.fromJson(json)).toList();
 
         // Split orders
-        final now = DateTime.now();
-        final todayStr =
-            "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
 
-        pendingOrders = tOrder!
-            .where(
-              (o) =>
-                  o.processUser == null &&
-                  (o.entryDate != null && o.entryDate!.startsWith(todayStr)),
-            )
-            .toList();
+        pendingOrders = tOrder!.where((o) => o.processUserOid == null).toList();
         acceptedOrders = tOrder!
-            .where(
-              (o) =>
-                  o.processUser != null &&
-                  (o.processDate != null &&
-                      o.processDate!.startsWith(todayStr)),
-            )
+            .where((o) => o.processUserOid != null)
             .toList();
+
+        // Sort Pending (Added) by entryDate descending
+        pendingOrders.sort((a, b) {
+          return DateTime.parse(
+            b.entryDate ?? '',
+          ).compareTo(DateTime.parse(a.entryDate ?? ''));
+        });
+
+        // Sort Accepted by processDate descending
+        acceptedOrders.sort((a, b) {
+          final aDate = a.processDate ?? a.entryDate ?? '';
+          final bDate = b.processDate ?? b.entryDate ?? '';
+          return DateTime.parse(bDate).compareTo(DateTime.parse(aDate));
+        });
 
         filteredOrders.value = tOrder ?? [];
         filteredPendingOrders.value = pendingOrders;
@@ -565,6 +562,7 @@ class HomeController extends BaseGetxController {
   @override
   void onReady() {
     super.onReady();
+    calculateDailyStats();
     getOrders();
   }
 
@@ -732,9 +730,12 @@ class HomeController extends BaseGetxController {
           msg: acceptOrderMsg!,
           backgroundColor: Colors.green,
         );
-        getOrders(
-          message: 'جاري قبول الطلب...',
-        ); // Refresh lists after accepting
+        acceptOrderMsg = response.message!;
+        SnackBarHelper.show(
+          msg: acceptOrderMsg!,
+          backgroundColor: Colors.green,
+        );
+        refreshData(); // Refresh lists and stats after accepting
       }
     }
     // إذا لم يكن هناك اتصال، احفظ محلياً

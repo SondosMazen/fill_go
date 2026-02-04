@@ -14,7 +14,7 @@ class RequestsController {
   }
 
   static Future<Response> getOrders({
-    Map<String, dynamic>? body,
+    // Map<String, dynamic>? body,
     Map<String, dynamic>? query,
   }) {
     return DioHelperApi().get("api/rubble/get_orders", queryParameters: query);

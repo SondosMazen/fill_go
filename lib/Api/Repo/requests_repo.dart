@@ -49,7 +49,7 @@ class RequestsRepo {
     BaseResponse<List<TOrder>> baseResponse;
     try {
       Response response;
-      response = await RequestsController.getOrders(body: map);
+      response = await RequestsController.getOrders();
       log('the response don ${response.data}');
       baseResponse = BaseResponse<List<TOrder>>().fromJson(response.data);
       log('the base response don');

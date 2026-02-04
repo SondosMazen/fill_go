@@ -247,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                     if (result == true) {
-                      controller.getOrders();
+                      controller.refreshData();
                     }
                   },
                   backgroundColor: AssetsColors.primaryOrange,
@@ -290,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildTab(RxList<dynamic> ordersList, String title, RxInt count) {
     return RefreshIndicator(
-      onRefresh: () => controller.getOrders(),
+      onRefresh: () => controller.refreshData(),
       color: AssetsColors.primaryOrange,
       backgroundColor: Colors.white,
       child: Obx(() {
