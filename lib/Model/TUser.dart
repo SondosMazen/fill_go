@@ -19,6 +19,7 @@ class TUser extends BaseModel {
     required this.userType,
     this.token,
     this.updatedAt,
+    this.rubbleSiteName,
   });
 
   int? oid;
@@ -28,6 +29,7 @@ class TUser extends BaseModel {
   final UserType userType;
   String? token;
   String? updatedAt;
+  String? rubbleSiteName;
 
   factory TUser.fromJson(Map<String, dynamic> json) {
     return TUser(
@@ -45,6 +47,7 @@ class TUser extends BaseModel {
         return UserType.contractor; // Default
       }(),
       token: json['token'],
+      rubbleSiteName: json['rubble_site_name']?.toString(),
     );
   }
 
@@ -57,6 +60,7 @@ class TUser extends BaseModel {
     'token': token,
     'updated_at': updatedAt,
     'oid': oid,
+    'rubble_site_name': rubbleSiteName,
   };
 
   @override

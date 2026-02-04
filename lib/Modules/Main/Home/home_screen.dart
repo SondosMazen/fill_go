@@ -54,37 +54,75 @@ class _HomeScreenState extends State<HomeScreen> {
         length: isInspector ? 3 : 2,
         child: Scaffold(
           backgroundColor: Colors.white,
-          appBar: AppBar(
-            centerTitle: true,
-            elevation: 0,
-            title: Text(
-              'الطلبات',
-              style: FontsAppHelper().cairoBoldFont(
-                size: 22,
-                color: Colors.white,
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(120), // ⭐ زد الارتفاع هنا
+            child: AppBar(
+              centerTitle: true,
+              elevation: 0,
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'الطلبات',
+                    style: FontsAppHelper().cairoBoldFont(
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    controller.appBarTitle.value,
+                    style: FontsAppHelper().cairoBoldFont(
+                      size: 13,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2, // ⭐ اسمح بسطرين
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-            ),
-            actions: [
-              // زر الإشعارات مع عداد الطلبات المعلقة
-              Obx(() {
-                try {
-                  final syncService = Get.find<SyncService>();
-                  final count = syncService.pendingCount.value;
-                  return badges.Badge(
-                    showBadge: count > 0,
-                    badgeContent: Text(
-                      count.toString(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+
+              // title: Text(
+              //   controller.appBarTitle.value,
+              //   style: FontsAppHelper().cairoBoldFont(
+              //     size: 22,
+              //     color: Colors.white,
+              //   ),
+              // ),
+              actions: [
+                // زر الإشعارات مع عداد الطلبات المعلقة
+                Obx(() {
+                  try {
+                    final syncService = Get.find<SyncService>();
+                    final count = syncService.pendingCount.value;
+                    return badges.Badge(
+                      showBadge: count > 0,
+                      badgeContent: Text(
+                        count.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    badgeStyle: const badges.BadgeStyle(
-                      badgeColor: Colors.red,
-                      padding: EdgeInsets.all(5),
-                    ),
-                    child: IconButton(
+                      badgeStyle: const badges.BadgeStyle(
+                        badgeColor: Colors.red,
+                        padding: EdgeInsets.all(5),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.notifications_outlined,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          Get.to(() => const CombinedNotificationsScreen());
+                        },
+                      ),
+                    );
+                  } catch (e) {
+                    return IconButton(
                       icon: const Icon(
                         Icons.notifications_outlined,
                         color: Colors.white,
@@ -92,103 +130,95 @@ class _HomeScreenState extends State<HomeScreen> {
                       onPressed: () {
                         Get.to(() => const CombinedNotificationsScreen());
                       },
-                    ),
-                  );
-                } catch (e) {
-                  return IconButton(
-                    icon: const Icon(
-                      Icons.notifications_outlined,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {
-                      Get.to(() => const CombinedNotificationsScreen());
-                    },
-                  );
-                }
-              }),
-              IconButton(
-                icon: const Icon(Icons.logout_rounded, color: Colors.white),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                onPressed: () {
-                  // Check connectivity
-                  final isOnline =
-                      Get.find<ConnectivityService>().isOnline.value;
+                    );
+                  }
+                }),
+                IconButton(
+                  icon: const Icon(Icons.logout_rounded, color: Colors.white),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  onPressed: () {
+                    // Check connectivity
+                    final isOnline =
+                        Get.find<ConnectivityService>().isOnline.value;
 
-                  Get.defaultDialog(
-                    title: 'تسجيل الخروج',
-                    titleStyle: FontsAppHelper().cairoBoldFont(
-                      size: 16,
-                      color: AssetsColors.color_text_black_392C23,
-                    ),
-                    content: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        isOnline
-                            ? 'هل أنت متأكد من تسجيل الخروج؟'
-                            : 'أنت غير متصل بالإنترنت. تسجيل الخروج سيكون محلياً فقط، ويمكنك العودة بنفس الحساب.',
-                        textAlign: TextAlign.center,
-                        style: FontsAppHelper().cairoMediumFont(size: 14),
+                    Get.defaultDialog(
+                      title: 'تسجيل الخروج',
+                      titleStyle: FontsAppHelper().cairoBoldFont(
+                        size: 16,
+                        color: AssetsColors.color_text_black_392C23,
                       ),
-                    ),
-                    confirm: ElevatedButton(
-                      onPressed: () async {
-                        final shared = Application.sharedPreferences;
-
-                        if (isOnline) {
-                          // Online: We still want to keep data for potential offline re-login
-                          // So we DO NOT clear token or user data here.
-                          // Unless we strictly want to prevent offline login after online logout.
-                          // But the requirement is to allow it.
-
-                          // Optional: Call server logout API if exists (UserAuthController.postUserAuthLogOut)
-                          // But currently not implemented here.
-                        } else {
-                          // Offline: Soft logout (Keep token & user data)
-                        }
-
-                        await shared.setBool(Constants.USER_IS_LOGIN, false);
-                        Get.offAllNamed(AppPages.login);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AssetsColors.primaryOrange,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 8,
+                      content: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          isOnline
+                              ? 'هل أنت متأكد من تسجيل الخروج؟'
+                              : 'أنت غير متصل بالإنترنت. تسجيل الخروج سيكون محلياً فقط، ويمكنك العودة بنفس الحساب.',
+                          textAlign: TextAlign.center,
+                          style: FontsAppHelper().cairoMediumFont(size: 14),
                         ),
                       ),
-                      child: Text(
-                        'نعم',
-                        style: FontsAppHelper().cairoBoldFont(
-                          size: 14,
-                          color: Colors.white,
+                      confirm: ElevatedButton(
+                        onPressed: () async {
+                          final shared = Application.sharedPreferences;
+
+                          if (isOnline) {
+                            // Online: We still want to keep data for potential offline re-login
+                            // So we DO NOT clear token or user data here.
+                            // Unless we strictly want to prevent offline login after online logout.
+                            // But the requirement is to allow it.
+
+                            // Optional: Call server logout API if exists (UserAuthController.postUserAuthLogOut)
+                            // But currently not implemented here.
+                          } else {
+                            // Offline: Soft logout (Keep token & user data)
+                          }
+
+                          await shared.setBool(Constants.USER_IS_LOGIN, false);
+                          Get.offAllNamed(AppPages.login);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AssetsColors.primaryOrange,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 8,
+                          ),
+                        ),
+                        child: Text(
+                          'نعم',
+                          style: FontsAppHelper().cairoBoldFont(
+                            size: 14,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                    ),
-                    cancel: TextButton(
-                      onPressed: () => Get.back(),
-                      child: Text(
-                        'لا',
-                        style: FontsAppHelper().cairoBoldFont(
-                          size: 14,
-                          color: Colors.grey,
+                      cancel: TextButton(
+                        onPressed: () => Get.back(),
+                        child: Text(
+                          'لا',
+                          style: FontsAppHelper().cairoBoldFont(
+                            size: 14,
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
-            ],
-            bottom: TabBar(
-              indicatorColor: Colors.white,
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.white.withOpacity(0.6),
-              labelStyle: FontsAppHelper().cairoBoldFont(size: 16),
-              unselectedLabelStyle: FontsAppHelper().cairoMediumFont(size: 16),
-              tabs: [
-                const Tab(text: 'قيد المعالجة'),
-                const Tab(text: 'تم القبول'),
-                if (isInspector) const Tab(text: 'طلبات الاوفلاين'),
+                    );
+                  },
+                ),
               ],
+              bottom: TabBar(
+                indicatorColor: Colors.white,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white.withOpacity(0.6),
+                labelStyle: FontsAppHelper().cairoBoldFont(size: 16),
+                unselectedLabelStyle: FontsAppHelper().cairoMediumFont(
+                  size: 16,
+                ),
+                tabs: [
+                  const Tab(text: 'قيد المعالجة'),
+                  const Tab(text: 'تم القبول'),
+                  if (isInspector) const Tab(text: 'طلبات الاوفلاين'),
+                ],
+              ),
             ),
           ),
           body: TabBarView(

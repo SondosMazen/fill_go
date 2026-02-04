@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:rubble_app/Api/Repo/requests_repo.dart';
+import 'package:rubble_app/Api/Controllers/requests_controller.dart';
 import 'package:rubble_app/App/Constant.dart';
 import 'package:rubble_app/App/app.dart';
 import 'package:rubble_app/Helpers/assets_color.dart';
@@ -36,6 +37,7 @@ class HomeController extends BaseGetxController {
   RxList<PendingOrder> filteredOfflineRequests = <PendingOrder>[].obs;
   // العداد الكلي للطلبات المضافة اليوم (تراكمي)
   RxInt totalOfflineAddedToday = 0.obs;
+  RxString appBarTitle = 'الطلبات'.obs;
   Map<String, String> sitesMap = {};
 
   List<TOrder> pendingOrders = [];
@@ -74,6 +76,7 @@ class HomeController extends BaseGetxController {
     loadLocalAcceptedOrderIds();
     loadOfflineRequests(); // تحميل طلبات الاوفلاين
     loadSitesMap();
+    updateAppBarTitle();
 
     // الاستماع للتغييرات في SyncService
     try {
@@ -224,8 +227,37 @@ class HomeController extends BaseGetxController {
           }
         }
       }
+      updateAppBarTitle();
     } catch (e) {
       log('Error loading sites map: $e');
+    }
+  }
+
+  void updateAppBarTitle() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataStr = prefs.getString(Constants.USER_DATA);
+
+      if (userDataStr != null) {
+        final userData = jsonDecode(userDataStr);
+        final name = userData['name'] ?? '';
+
+        if (isContractor) {
+          appBarTitle.value = name;
+        } else {
+          String siteName = userData['rubble_site_name'] ?? '';
+          // Clean up 'null' string if it was saved that way
+          if (siteName == 'null') siteName = '';
+
+          if (siteName.isNotEmpty) {
+            appBarTitle.value = "$name - $siteName";
+          } else {
+            appBarTitle.value = name;
+          }
+        }
+      }
+    } catch (e) {
+      log('Error updating app bar title: $e');
     }
   }
 
@@ -237,11 +269,13 @@ class HomeController extends BaseGetxController {
   RxInt todayAddedCount = 0.obs;
   RxInt todayAcceptedCount = 0.obs;
 
-  void calculateDailyStats() async {
+  Future<void> calculateDailyStats() async {
+    /*
     final now = DateTime.now();
     final todayStr =
         "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
 
+    // --- PREVIOUS MANUAL CALCULATION (KEPT FOR REFERENCE) ---
     int added = 0;
     int accepted = 0;
 
@@ -262,15 +296,7 @@ class HomeController extends BaseGetxController {
     }
 
     // 2. Local Offline Requests (Added Today)
-    // Disabled as per request: Offline requests count should not be added to the daily "Added Today" stats
-    // which is reserved for orders added by contractors (usertype=2).
-    /*
-    for (var req in offlineRequests) {
-      if (req.createdAt != null && req.createdAt!.startsWith(todayStr)) {
-        added++;
-      }
-    }
-    */
+    // Disabled logic...
 
     // 3. Local Accepted Orders (Accepted Today)
     int localAcceptedToday = 0;
@@ -302,6 +328,40 @@ class HomeController extends BaseGetxController {
 
     todayAddedCount.value = added;
     todayAcceptedCount.value = accepted + localAcceptedToday;
+    */
+
+    // --- NEW LOGIC: FETCH FROM API ONLY ---
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? currentUserId;
+      final userDataStr = prefs.getString(Constants.USER_DATA);
+      if (userDataStr != null) {
+        final userData = jsonDecode(userDataStr);
+        currentUserId = userData['oid']?.toString();
+      }
+
+      Map<String, dynamic> query = {};
+      if (currentUserId != null) {
+        query['user_id'] = currentUserId;
+      }
+
+      log('Requesting Statistics: URL=api/rubble/statistic, Query=$query');
+      final response = await RequestsController.getStatistics(query: query);
+      log('Statistics Response: ${response.data}');
+
+      if (response.data != null &&
+          response.data['status'] == true &&
+          response.data['data'] != null) {
+        final data = response.data['data'];
+        int apiPending = data['pending_orders'] ?? 0;
+        int apiComplete = data['complete_orders'] ?? 0;
+
+        todayAddedCount.value = apiPending;
+        todayAcceptedCount.value = apiComplete;
+      }
+    } catch (e) {
+      log('Error calculating daily stats from API: $e');
+    }
   }
 
   Future<List<TOrder>?> getOrders({String? message}) async {

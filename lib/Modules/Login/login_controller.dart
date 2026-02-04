@@ -76,6 +76,7 @@ class LoginController extends BaseGetxController {
           'is_active': '${tUser.isActive}',
           'token': '${tUser.token}',
           'user_type': userTypeStr, // Save type here
+          'rubble_site_name': '${tUser.rubbleSiteName ?? ''}',
         };
 
         // 1. حفظ في SharedPreferences (Active Session)

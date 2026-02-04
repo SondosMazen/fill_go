@@ -106,6 +106,9 @@ class _AddRequestState extends State<AddRequest> {
         ),
       ),
       body: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 100,
+        ),
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: GetBuilder<AddRequestController>(
@@ -230,8 +233,8 @@ class _AddRequestState extends State<AddRequest> {
                               ),
                             ),
                             itemHeight: 50,
-                            maxSuggestionsInViewPort: 5,
-                            offset: const Offset(0, 60),
+                            maxSuggestionsInViewPort: 3,
+                            offset: const Offset(0, -150),
                             suggestionsDecoration: SuggestionDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(10),
@@ -241,6 +244,11 @@ class _AddRequestState extends State<AddRequest> {
                                   blurRadius: 10,
                                 ),
                               ],
+                            ),
+                            suggestionStyle: TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             onSuggestionTap: (value) {
                               controller.driversController.text =
@@ -369,8 +377,8 @@ class _AddRequestState extends State<AddRequest> {
                               ),
                             ),
                             itemHeight: 50,
-                            maxSuggestionsInViewPort: 5,
-                            offset: const Offset(0, 60),
+                            maxSuggestionsInViewPort: 3,
+                            offset: const Offset(0, -150),
                             suggestionsDecoration: SuggestionDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(10),
@@ -380,6 +388,11 @@ class _AddRequestState extends State<AddRequest> {
                                   blurRadius: 10,
                                 ),
                               ],
+                            ),
+                            suggestionStyle: TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             onSuggestionTap: (value) {
                               controller.unloadingLocationController.text =
