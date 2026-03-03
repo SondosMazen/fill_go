@@ -461,7 +461,7 @@ class AddRequestController extends BaseGetxController {
     return tSites?.map((driver) {
       return SearchFieldListItem(
         driver.name ?? 'لا يوجد اسم',
-        value: '${driver.oid}',
+        item: '${driver.oid}',
       );
     }).toList();
   }
@@ -470,7 +470,7 @@ class AddRequestController extends BaseGetxController {
     return tDrivers?.map((driver) {
       return SearchFieldListItem(
         driver.name ?? 'لا يوجد اسم',
-        value: '${driver.oid}',
+        item: '${driver.oid}',
       );
     }).toList();
   }

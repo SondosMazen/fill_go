@@ -87,7 +87,7 @@ class AddOfflineRequest extends StatelessWidget {
                             textInputAction: TextInputAction.next,
                             autoCorrect: true,
                             readOnly: false,
-                            searchInputDecoration: SearchInputDecoration(
+                            searchInputDecoration: InputDecoration(
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 14,
@@ -95,11 +95,6 @@ class AddOfflineRequest extends StatelessWidget {
                               filled: true,
                               fillColor: const Color(0xFFFAFAFA),
                               hintText: 'اختر اسم السائق',
-                              prefixIcon: const Icon(
-                                Icons.person_outline_rounded,
-                                color: AssetsColors.color_gray_hint_9C9C9C,
-                                size: 22,
-                              ),
                               hintStyle: const TextStyle(
                                 fontSize: 13,
                                 color: AssetsColors
@@ -146,7 +141,7 @@ class AddOfflineRequest extends StatelessWidget {
                               controller.driversController.text =
                                   value.searchKey;
                               controller.selectedDriverValue =
-                                  value.value ?? '';
+                                  value.item?.toString() ?? '';
                               controller.selectedDriverName = value.searchKey;
                               controller.update();
                             },

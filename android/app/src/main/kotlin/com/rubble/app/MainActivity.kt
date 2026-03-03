@@ -1,4 +1,4 @@
-package com.example.fill_go
+package com.rubble.app
 
 import io.flutter.embedding.android.FlutterActivity
 

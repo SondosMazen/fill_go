@@ -185,7 +185,7 @@ class _AddRequestState extends State<AddRequest> {
                             autoCorrect: true,
                             focusNode: _driverFocusNode,
                             readOnly: false,
-                            searchInputDecoration: SearchInputDecoration(
+                            searchInputDecoration: InputDecoration(
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 14,
@@ -195,13 +195,6 @@ class _AddRequestState extends State<AddRequest> {
                               hintText: driverName.isNotEmpty
                                   ? driverName
                                   : 'اختر اسم السائق',
-                              prefixIcon: Icon(
-                                Icons.person_outline_rounded,
-                                color: _isDriverFocused
-                                    ? AssetsColors.primaryOrange
-                                    : AssetsColors.color_gray_hint_9C9C9C,
-                                size: 22,
-                              ),
                               hintStyle: const TextStyle(
                                 fontSize: 13,
                                 color: AssetsColors
@@ -254,7 +247,7 @@ class _AddRequestState extends State<AddRequest> {
                               controller.driversController.text =
                                   value.searchKey;
                               controller.selectedDriverValue =
-                                  value.value ?? '';
+                                  value.item?.toString() ?? '';
                               controller.update();
                             },
                             suggestions: controller.getDriversList() ?? [],
@@ -331,7 +324,7 @@ class _AddRequestState extends State<AddRequest> {
                             autoCorrect: true,
                             focusNode: _unloadingLocationFocusNode,
                             readOnly: false,
-                            searchInputDecoration: SearchInputDecoration(
+                            searchInputDecoration: InputDecoration(
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 14,
@@ -339,13 +332,6 @@ class _AddRequestState extends State<AddRequest> {
                               filled: true,
                               fillColor: const Color(0xFFFAFAFA),
                               hintText: widget.site ?? 'اختر موقع التفريغ',
-                              prefixIcon: Icon(
-                                Icons.flag_outlined,
-                                color: _isUnloadingLocationFocused
-                                    ? AssetsColors.primaryOrange
-                                    : AssetsColors.color_gray_hint_9C9C9C,
-                                size: 22,
-                              ),
                               hintStyle: const TextStyle(
                                 fontSize: 13,
                                 color: AssetsColors
@@ -398,7 +384,7 @@ class _AddRequestState extends State<AddRequest> {
                               controller.unloadingLocationController.text =
                                   value.searchKey;
                               controller.selectedUnloadLocationValue =
-                                  value.value ?? '';
+                                  value.item?.toString() ?? '';
                               controller.update();
                             },
                             suggestions: controller.getSitesList() ?? [],
