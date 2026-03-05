@@ -21,6 +21,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AddRequestController extends BaseGetxController {
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
+  String getCurrentFormattedDate() {
+    final now = DateTime.now();
+    return "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} "
+        "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}";
+  }
+
   TextEditingController titleController = TextEditingController();
   TextEditingController orderNumController = TextEditingController();
   TextEditingController loadingLocationController = TextEditingController();
@@ -105,6 +111,11 @@ class AddRequestController extends BaseGetxController {
 
     DialogHelper.showLoading();
 
+    final now = DateTime.now();
+    final entryDate =
+        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} "
+        "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}";
+
     Map<String, dynamic> map = {
       'location': loadingLocationController.text,
       'car_num': carNumberController.text,
@@ -113,6 +124,7 @@ class AddRequestController extends BaseGetxController {
       'notes': notesController.text,
       'driver_oid': selectedDriverValue,
       'order_num': orderNumController.text,
+      'entry_date': getCurrentFormattedDate(),
     };
 
     // Check for duplicate order number is removed as per request.
@@ -165,6 +177,7 @@ class AddRequestController extends BaseGetxController {
           createdAt: DateTime.now().toIso8601String(),
           syncStatus: 'pending',
           userId: userId, // Ensure userId is passed here
+          entryDate: getCurrentFormattedDate(),
         );
 
         await dbHelper.create(pendingOrder);

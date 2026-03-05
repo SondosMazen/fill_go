@@ -152,6 +152,11 @@ class PendingAcceptOrdersScreen extends StatelessWidget {
         statusText = 'غير معروف';
     }
 
+    bool isLongPending = false;
+    if (order.syncStatus == 'pending' && order.createdAt != null) {
+      isLongPending = DateTime.now().difference(order.createdAt).inMinutes > 5;
+    }
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -262,24 +267,53 @@ class PendingAcceptOrdersScreen extends StatelessWidget {
 
             _buildDetailRow('الملاحظات', order.notes ?? 'تم قبول الطلب'),
 
-            if (order.syncStatus == 'failed' && order.errorMessage != null)
+            //if (order.syncStatus == 'failed' && order.errorMessage != null)
+            if ((order.syncStatus == 'failed' ||
+                    order.syncStatus == 'pending' ||
+                    isLongPending) &&
+                order.errorMessage != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.red.shade50,
+                    //color: Colors.red.shade50,
+                    color: order.syncStatus == 'failed'
+                        ? Colors.red.shade50
+                        : Colors.orange.shade50,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.warning_amber, size: 16, color: Colors.red),
+                      // Icon(Icons.warning_amber, size: 16, color: Colors.red),
+                      Icon(
+                        order.syncStatus == 'failed'
+                            ? Icons.warning_amber
+                            : Icons.timelapse,
+                        size: 16,
+                        color: order.syncStatus == 'failed'
+                            ? Colors.red
+                            : Colors.orange,
+                      ),
                       const SizedBox(width: 8),
+                      // Expanded(
+                      //   child: Text(
+                      //     order.errorMessage!,
+                      //     style: TextStyle(
+                      //       color: Colors.red.shade700,
+                      //       fontSize: 12,
+                      //     ),
+                      //   ),
+                      // ),
                       Expanded(
                         child: Text(
-                          order.errorMessage!,
+                          isLongPending
+                              ? '⚠️ المزامنة استغرقت وقت أكثر من المتوقع'
+                              : order.errorMessage!,
                           style: TextStyle(
-                            color: Colors.red.shade700,
+                            color: order.syncStatus == 'failed'
+                                ? Colors.red.shade700
+                                : Colors.orange.shade700,
                             fontSize: 12,
                           ),
                         ),

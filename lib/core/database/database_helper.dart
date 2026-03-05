@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 7,
+      version: 8,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -50,7 +50,8 @@ class DatabaseHelper {
         created_at $textType,
         sync_status $textType,
         error_message $textType,
-        user_id $textType
+        user_id $textType,
+        entry_date $textType
       )
     ''');
 
@@ -183,6 +184,16 @@ class DatabaseHelper {
         );
       } catch (e) {
         // user_id likely already exists
+      }
+    }
+    if (oldVersion < 8) {
+      try {
+        await db.execute(
+          'ALTER TABLE pending_orders ADD COLUMN entry_date TEXT',
+        );
+        print('✅ Database upgraded to version 8 (added entry_date)');
+      } catch (e) {
+        print('⚠️ Error adding entry_date column: $e');
       }
     }
   }

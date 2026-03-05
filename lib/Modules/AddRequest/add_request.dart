@@ -23,6 +23,7 @@ class AddRequest extends StatefulWidget {
   bool isDetails;
   bool isAccepted;
   String userType;
+
   AddRequest({
     super.key,
     required this.isDetails,

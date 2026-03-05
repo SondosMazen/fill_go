@@ -15,6 +15,7 @@ class PendingOrder extends BaseModel {
   String? syncStatus; // 'pending', 'syncing', 'failed', 'success'
   String? errorMessage; // رسالة الخطأ في حالة فشل المزامنة
   String? userId; // معرف المستخدم الذي أنشأ الطلب
+  String? entryDate;
 
   PendingOrder({
     this.id,
@@ -30,6 +31,7 @@ class PendingOrder extends BaseModel {
     this.syncStatus = 'pending',
     this.errorMessage,
     this.userId,
+    this.entryDate,
   });
 
   /// تحويل من Map (من قاعدة البيانات)
@@ -48,6 +50,7 @@ class PendingOrder extends BaseModel {
       syncStatus: map['sync_status'] as String? ?? 'pending',
       errorMessage: map['error_message'] as String?,
       userId: map['user_id'] as String?,
+      entryDate: map['entry_date'] as String?,
     );
   }
 
@@ -67,6 +70,7 @@ class PendingOrder extends BaseModel {
       'sync_status': syncStatus,
       'error_message': errorMessage,
       'user_id': userId,
+      'entry_date': entryDate,
     };
   }
 
@@ -80,6 +84,7 @@ class PendingOrder extends BaseModel {
       'notes': notes,
       'driver_oid': driverOid,
       'order_num': referenceNumber,
+      'entry_date': entryDate,
     };
   }
 
@@ -98,6 +103,7 @@ class PendingOrder extends BaseModel {
     String? syncStatus,
     String? errorMessage,
     String? userId,
+    String? entryDate,
   }) {
     return PendingOrder(
       id: id ?? this.id,
@@ -113,6 +119,7 @@ class PendingOrder extends BaseModel {
       syncStatus: syncStatus ?? this.syncStatus,
       errorMessage: errorMessage ?? this.errorMessage,
       userId: userId ?? this.userId,
+      entryDate: entryDate ?? this.entryDate,
     );
   }
 
